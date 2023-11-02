@@ -9,7 +9,7 @@ app.use(express.json());
 
 dotenv.config();
 
-const SERVER_PORT = process.env.SERVER_PORT || 80;
+const PORT = process.env.PORT || 80;
 
 
 app.get("/", async (req: express.Request, res: express.Response) => {
@@ -109,10 +109,10 @@ app.get("/search", (req: express.Request, res: express.Response) => {
 
 
 
-app.listen(SERVER_PORT, "0.0.0.0", async () => {
+app.listen(PORT, "0.0.0.0", async () => {
     await northwindTradersModel.migrateDatabase();
     await northwindTradersModel.fillDatabase();
 
-    console.log(`app is listening on ${SERVER_PORT} port.`)
+    console.log(`app is listening on ${PORT} port.`)
 })
 
