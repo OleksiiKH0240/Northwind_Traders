@@ -73,19 +73,19 @@ class NorthwindTradersModel {
         for (const [tableName, fileName] of tablesFilesNames) {
 
             try {
-                result = await db.execute(sql.raw(`select count(*) from ${POSTGRES_DB}.${tableName};`));
+                result = await this.dbClient.execute(sql.raw(`select count(*) from ${POSTGRES_DB}.${tableName};`));
                 // console.log(tableName, result);
 
                 if (result[0].count != tablesRowsCount[tableName]) {
                     // console.log(tableName, result);
-                    if (result[0].count != 0) await db.execute(sql.raw(`delete from ${POSTGRES_DB}.${tableName};`))
+                    if (result[0].count != 0) await this.dbClient.execute(sql.raw(`delete from ${POSTGRES_DB}.${tableName};`))
 
                     const sqlQuery = `
-            COPY ${POSTGRES_DB}.${tableName} 
-            FROM '/tables_data_example/${fileName}' 
-            DELIMITER ',' 
-            CSV HEADER;`;
-                    result = await db.execute(sql.raw(sqlQuery));
+                    COPY ${POSTGRES_DB}.${tableName} 
+                    FROM '/tables_data_example/${fileName}' 
+                    DELIMITER ',' 
+                    CSV HEADER;`;
+                    result = await this.dbClient.execute(sql.raw(sqlQuery));
                     // console.log(result);
                     console.log(tableName, " was uploaded.");
                 }
@@ -107,6 +107,26 @@ class NorthwindTradersModel {
 
     async getEmployeeById(employeeId: number): Promise<typeof schemas.employees.$inferSelect> {
         const result = await this.dbClient.select().from(schemas.employees).where(eq(schemas.employees.employeeId, employeeId));
+        return result[0];
+    }
+
+    async getAllCustomers(): Promise<Array<typeof schemas.customers.$inferSelect>> {
+        const result = await this.dbClient.select().from(schemas.customers);
+        return result;
+    }
+
+    async getCustomerById(customerId: string): Promise<typeof schemas.customers.$inferSelect> {
+        const result = await this.dbClient.select().from(schemas.customers).where(eq(schemas.customers.customerId, customerId));
+        return result[0];
+    }
+
+    async getAllSuppliers(): Promise<Array<typeof schemas.suppliers.$inferSelect>> {
+        const result = await this.dbClient.select().from(schemas.suppliers);
+        return result;
+    }
+
+    async getSupplierById(supplierId: number): Promise<typeof schemas.suppliers.$inferSelect> {
+        const result = await this.dbClient.select().from(schemas.suppliers).where(eq(schemas.suppliers.supplierId, supplierId));
         return result[0];
     }
 }
