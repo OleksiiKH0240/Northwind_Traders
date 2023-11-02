@@ -12,6 +12,10 @@ dotenv.config();
 const SERVER_PORT = process.env.SERVER_PORT || 8000;
 
 
+app.get("/", async (req: express.Request, res: express.Response) => {
+    res.status(200).send("healthy");
+})
+
 app.get("/dash", (req: express.Request, res: express.Response) => {
     const WorkerObj = {
         Colo: "KBP",
@@ -108,7 +112,7 @@ app.get("/search", (req: express.Request, res: express.Response) => {
 app.listen(SERVER_PORT, async () => {
     await northwindTradersModel.migrateDatabase();
     await northwindTradersModel.fillDatabase();
-    
+
     console.log(`app is listening on ${SERVER_PORT} port.`)
 })
 
