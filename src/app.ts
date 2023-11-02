@@ -109,7 +109,7 @@ app.get("/search", (req: express.Request, res: express.Response) => {
 
 
 
-app.listen(SERVER_PORT, async () => {
+app.listen(SERVER_PORT, "0.0.0.0", async () => {
     await northwindTradersModel.migrateDatabase();
     await northwindTradersModel.fillDatabase();
 
