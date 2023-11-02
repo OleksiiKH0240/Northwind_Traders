@@ -9,7 +9,7 @@ app.use(express.json());
 
 dotenv.config();
 
-const SERVER_PORT = process.env.SERVER_PORT || 8000;
+const SERVER_PORT = process.env.SERVER_PORT || 80;
 
 
 app.get("/", async (req: express.Request, res: express.Response) => {
