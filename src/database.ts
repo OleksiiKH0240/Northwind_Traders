@@ -129,6 +129,26 @@ class NorthwindTradersModel {
         const result = await this.dbClient.select().from(schemas.suppliers).where(eq(schemas.suppliers.supplierId, supplierId));
         return result[0];
     }
+
+    async getAllProducts(): Promise<Array<typeof schemas.products.$inferSelect>> {
+        const result = await this.dbClient.select().from(schemas.products);
+        return result;
+    }
+
+    async getProductById(productId: number): Promise<typeof schemas.products.$inferSelect> {
+        const result = await this.dbClient.select().from(schemas.products).where(eq(schemas.products.productId, productId));
+        return result[0];
+    }
+
+    async getAllOrders(): Promise<Array<typeof schemas.orders.$inferSelect>> {
+        const result = await this.dbClient.select().from(schemas.orders);
+        return result;
+    }
+
+    async getOrderById(orderId: number): Promise<typeof schemas.orders.$inferSelect> {
+        const result = await this.dbClient.select().from(schemas.orders).where(eq(schemas.orders.orderId, orderId));
+        return result[0];
+    }
 }
 
 

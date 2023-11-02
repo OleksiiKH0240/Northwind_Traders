@@ -69,7 +69,7 @@ app.get("/dash", (req: express.Request, res: express.Response) => {
 const MAX_ITEMS_PER_PAGE = 20;
 
 app.get("/suppliers", async (req: express.Request, res: express.Response) => {
-    let suppliersObj;
+    let suppliersObj: typeof schemas.suppliers.$inferSelect[];
     try {
         suppliersObj = await northwindTradersModel.getAllSuppliers();
     } catch (error) {
@@ -88,27 +88,16 @@ app.get("/suppliers", async (req: express.Request, res: express.Response) => {
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
     suppliersObj = suppliersObj.slice(minIdx, maxIdx + 1);
 
-
-    // const response = suppliersObj.map((supplierObj) => {
-    //     return {
-    //         supplierId: supplierObj.supplierId,
-    //         companyName: supplierObj.companyName,
-    //         contactName: supplierObj.contactName,
-    //         contactTitle: supplierObj.contactTitle,
-    //         city: supplierObj.city,
-    //         country: supplierObj.country,
-    //     };
-    // });
-
-    const response = suppliersObj.map((supplierObj) => filterObject(supplierObj, ["supplierId", "companyName", "contactName", "contactTitle", "city", "country"]))
+    const response = suppliersObj.map((supplierObj) => filterObject(supplierObj,
+        ["supplierId", "companyName", "contactName", "contactTitle", "city", "country"]))
 
     res.status(200).json(response);
 })
 
 app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Response) => {
-    const supplierId = Number(req.params.employee_id);
+    const supplierId = Number(req.params.supplier_id);
     if (Number.isNaN(supplierId)) {
-        res.status(400).send("wrong format of employeeId");
+        res.status(400).send("wrong format of supplierId");
         return;
     }
 
@@ -120,27 +109,102 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
         return;
     }
 
-    res.status(200).json(supplierObj);
+    let response = filterObject(supplierObj,
+        ["supplierId", "companyName", "contactName", "contactTitle", "address", "city", "region", "postalCode", "country", "phone"]);
+
+    res.status(200).json(response);
 })
 
-app.get("/products", (req: express.Request, res: express.Response) => {
+app.get("/products", async (req: express.Request, res: express.Response) => {
+    let productsObj: typeof schemas.products.$inferSelect[];
+    try {
+        productsObj = await northwindTradersModel.getAllProducts();
+    } catch (error) {
+        res.status(500).send("something went wrong on the server side.");
+        return;
+    }
 
+    const maxPageNumber = Math.ceil(productsObj.length / MAX_ITEMS_PER_PAGE);
+    const pageNumber: number = Number(req.query.page || 1);
+    if (pageNumber > maxPageNumber || pageNumber < 0) {
+        res.status(200).send("No results");
+        return;
+    }
+
+    const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
+    const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
+    productsObj = productsObj.slice(minIdx, maxIdx + 1);
+
+    const response = productsObj.map((productObj) => filterObject(productObj,
+        ["productId", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder"]))
+
+    res.status(200).json(response);
 })
 
-app.get("/product/:product_id", (req: express.Request, res: express.Response) => {
-    const productId = req.params.product_id;
+app.get("/product/:product_id", async (req: express.Request, res: express.Response) => {
+    const productId = Number(req.params.product_id);
+    if (Number.isNaN(productId)) {
+        res.status(400).send("wrong format of productId");
+        return;
+    }
+
+    let productObj: typeof schemas.products.$inferSelect;
+    try {
+        productObj = await northwindTradersModel.getProductById(productId);
+    } catch (error) {
+        res.status(500).send("something went wrong on the server side.");
+        return;
+    }
+
+    let supplierName: string | null;
+    if (productObj.supplierId === null) supplierName = null;
+    else {
+        const supplierObj = await northwindTradersModel.getSupplierById(productObj.supplierId);
+        supplierName = supplierObj.companyName;
+    }
+
+    let response = filterObject(productObj,
+        ["productId", "supplierId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder", "reorderLevel", "discontinued"]);
+    response = { ...response, supplierName };
+
+    res.status(200).json(response);
 })
 
-app.get("/orders", (req: express.Request, res: express.Response) => {
+app.get("/orders", async (req: express.Request, res: express.Response) => {
+    let ordersObj: typeof schemas.orders.$inferSelect[];
+    try {
+        ordersObj = await northwindTradersModel.getAllOrders();
+    } catch (error) {
+        res.status(500).send("something went wrong on the server side.");
+        return;
+    }
 
+    const maxPageNumber = Math.ceil(ordersObj.length / MAX_ITEMS_PER_PAGE);
+    const pageNumber: number = Number(req.query.page || 1);
+    if (pageNumber > maxPageNumber || pageNumber < 0) {
+        res.status(200).send("No results");
+        return;
+    }
+
+    const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
+    const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
+    ordersObj = ordersObj.slice(minIdx, maxIdx + 1);
+    console.log(ordersObj)
+
+    const response = ordersObj.map((orderObj) => filterObject(orderObj,
+        ["orderId", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder"]))
+
+    res.status(200).json(response);
+    // res.status(200).send("not_ready_yet");
 })
 
 app.get("/order/:order_id", (req: express.Request, res: express.Response) => {
     const orderId = req.params.order_id;
+    res.status(200).send("not_ready_yet");
 })
 
 app.get("/employees", async (req: express.Request, res: express.Response) => {
-    let employeesObj;
+    let employeesObj: typeof schemas.employees.$inferSelect[];
     try {
         employeesObj = await northwindTradersModel.getAllEmployees();
     } catch (error) {
@@ -159,16 +223,8 @@ app.get("/employees", async (req: express.Request, res: express.Response) => {
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
     employeesObj = employeesObj.slice(minIdx, maxIdx + 1);
 
-    const response = employeesObj.map((employeeObj) => {
-        return {
-            employeeId: employeeObj.employeeId,
-            name: (employeeObj.firstName + " " + employeeObj.lastName),
-            title: employeeObj.title,
-            city: employeeObj.city,
-            country: employeeObj.country,
-            phone: employeeObj.homePhone
-        };
-    });
+    const response = employeesObj.map((employeeObj) => filterObject(employeeObj,
+        ["employeeId", "name", "title", "phone", "city", "country"]))
     res.status(200).json(response);
 })
 
@@ -179,7 +235,7 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
         return;
     }
 
-    let employeeObj;
+    let employeeObj: typeof schemas.employees.$inferSelect;
     try {
         employeeObj = await northwindTradersModel.getEmployeeById(employeeId);
     } catch (error) {
@@ -187,11 +243,19 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
         return;
     }
 
-    res.status(200).json(employeeObj);
+    let reportsToEmployeeName: string | null;
+    if (employeeObj.reportsTo === null) reportsToEmployeeName = null;
+    else {
+        const reportsToEmployee = await northwindTradersModel.getEmployeeById(employeeObj.reportsTo);
+        reportsToEmployeeName = reportsToEmployee.firstName + " " + reportsToEmployee.lastName;
+    }
+
+    const response = { ...employeeObj, reportsToEmployeeName };
+    res.status(200).json(response);
 })
 
 app.get("/customers", async (req: express.Request, res: express.Response) => {
-    let customersObj;
+    let customersObj: typeof schemas.customers.$inferSelect[];
     try {
         customersObj = await northwindTradersModel.getAllCustomers();
     } catch (error) {
@@ -206,16 +270,8 @@ app.get("/customers", async (req: express.Request, res: express.Response) => {
         return;
     }
 
-    const response = customersObj.map((customerObj) => {
-        return {
-            customerId: customerObj.customerId,
-            companyName: customerObj.companyName,
-            contactName: customerObj.contactName,
-            city: customerObj.city,
-            country: customerObj.country,
-            contactTitle: customerObj.contactTitle
-        };
-    });
+    const response = customersObj.map((customerObj) => filterObject(customerObj,
+        ["customerId", "companyName", "contactName", "contactTitle", "city", "country"]))
     res.status(200).json(response);
 })
 
@@ -226,7 +282,7 @@ app.get("/customer/:customer_id", async (req: express.Request, res: express.Resp
         return;
     }
 
-    let customerObj;
+    let customerObj: typeof schemas.customers.$inferSelect;
     try {
         customerObj = await northwindTradersModel.getCustomerById(customerId);
     } catch (error) {
@@ -238,7 +294,7 @@ app.get("/customer/:customer_id", async (req: express.Request, res: express.Resp
 })
 
 app.get("/search", (req: express.Request, res: express.Response) => {
-
+    res.status(200).send("not_ready_yet");
 })
 
 
