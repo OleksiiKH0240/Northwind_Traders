@@ -29,9 +29,6 @@ const migrationClientOptions: {
     connection: { options: string }
 } = { max: 1, ...queryClientOptions };
 const migrationClient = postgres(POSTGRES_URL, migrationClientOptions);
-await migrate(drizzle(migrationClient), { migrationsFolder: "./drizzle" });
-console.log("database migration was successfuly done");
-
 
 
 const queryClient = postgres(POSTGRES_URL, queryClientOptions);
@@ -58,42 +55,49 @@ const tablesRowsCount: { [index: string]: number } = {
     "customers": 93, "orders": 830, "order_details": 2155
 }
 
-let result;
-for (const [tableName, fileName] of tablesFilesNames) {
-
-    try {
-        result = await db.execute(sql.raw(`select count(*) from ${POSTGRES_DB}.${tableName};`));
-        // console.log(tableName, result);
-
-        if (result[0].count != tablesRowsCount[tableName]) {
-            // console.log(tableName, result);
-            if (result[0].count != 0) await db.execute(sql.raw(`delete from ${POSTGRES_DB}.${tableName};`))
-
-            const sqlQuery = `
-            COPY ${POSTGRES_DB}.${tableName} 
-            FROM '/tables_data_example/${fileName}' 
-            DELIMITER ',' 
-            CSV HEADER;`;
-            result = await db.execute(sql.raw(sqlQuery));
-            // console.log(result);
-            console.log(tableName, " was uploaded.");
-        }
-    }
-    catch (error) {
-        if (error instanceof postgres.PostgresError) {
-            // console.log(error);
-            continue;
-        }
-        else console.log(error);
-    }
-}
-
 
 class NorthwindTradersModel {
     dbClient: PostgresJsDatabase<Record<string, never>>
 
     constructor(dbClient = db) {
         this.dbClient = db;
+    }
+
+    async migrateDatabase() {
+        await migrate(drizzle(migrationClient), { migrationsFolder: "./drizzle" });
+        console.log("database migration was successfuly done");
+    }
+
+    async fillDatabase() {
+        let result;
+        for (const [tableName, fileName] of tablesFilesNames) {
+
+            try {
+                result = await db.execute(sql.raw(`select count(*) from ${POSTGRES_DB}.${tableName};`));
+                // console.log(tableName, result);
+
+                if (result[0].count != tablesRowsCount[tableName]) {
+                    // console.log(tableName, result);
+                    if (result[0].count != 0) await db.execute(sql.raw(`delete from ${POSTGRES_DB}.${tableName};`))
+
+                    const sqlQuery = `
+            COPY ${POSTGRES_DB}.${tableName} 
+            FROM '/tables_data_example/${fileName}' 
+            DELIMITER ',' 
+            CSV HEADER;`;
+                    result = await db.execute(sql.raw(sqlQuery));
+                    // console.log(result);
+                    console.log(tableName, " was uploaded.");
+                }
+            }
+            catch (error) {
+                if (error instanceof postgres.PostgresError) {
+                    // console.log(error);
+                    continue;
+                }
+                else console.log(error);
+            }
+        }
     }
 
     async getAllEmployees(): Promise<Array<typeof schemas.employees.$inferSelect>> {

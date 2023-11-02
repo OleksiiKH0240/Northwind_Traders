@@ -1,6 +1,5 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import * as schemas from './schemas';
 import { northwindTradersModel } from './database';
 
 
@@ -12,9 +11,8 @@ dotenv.config();
 
 const SERVER_PORT = process.env.SERVER_PORT || 8000;
 
-northwindTradersModel;
 
-app.get("/dash", (req, res) => {
+app.get("/dash", (req: express.Request, res: express.Response) => {
     const WorkerObj = {
         Colo: "KBP",
         Country: "UA"
@@ -46,7 +44,7 @@ app.get("/dash", (req, res) => {
     res.status(200).json(response);
 })
 
-app.get("/suppliers", (req, res) => {
+app.get("/suppliers", (req: express.Request, res: express.Response) => {
     const MAX_SUPPLIERS_PER_PAGE = 20;
     const rawPageNumber = req.query.page || 1;
     const pageNumber: number = typeof rawPageNumber === 'string' ? parseInt(rawPageNumber) : 1;
@@ -54,32 +52,32 @@ app.get("/suppliers", (req, res) => {
     const maxId = pageNumber * MAX_SUPPLIERS_PER_PAGE
 })
 
-app.get("/supplier/:supplier_id", (req, res) => {
+app.get("/supplier/:supplier_id", (req: express.Request, res: express.Response) => {
     const supplierId = req.params.supplier_id;
 })
 
-app.get("/products", (req, res) => {
+app.get("/products", (req: express.Request, res: express.Response) => {
 
 })
 
-app.get("/product/:product_id", (req, res) => {
+app.get("/product/:product_id", (req: express.Request, res: express.Response) => {
     const productId = req.params.product_id;
 })
 
-app.get("/orders", (req, res) => {
+app.get("/orders", (req: express.Request, res: express.Response) => {
 
 })
 
-app.get("/order/:order_id", (req, res) => {
+app.get("/order/:order_id", (req: express.Request, res: express.Response) => {
     const orderId = req.params.order_id;
 })
 
-app.get("/employees", async (req, res) => {
+app.get("/employees", async (req: express.Request, res: express.Response) => {
     const employeesObj = await northwindTradersModel.getAllEmployees();
     res.status(200).json(employeesObj);
 })
 
-app.get("/employee/:employee_id", async (req, res) => {
+app.get("/employee/:employee_id", async (req: express.Request, res: express.Response) => {
     let employeeId;
     try {
         employeeId = parseInt(req.params.employee_id);
@@ -93,21 +91,24 @@ app.get("/employee/:employee_id", async (req, res) => {
     res.status(200).json(employeeObj);
 })
 
-app.get("/customers", (req, res) => {
+app.get("/customers", (req: express.Request, res: express.Response) => {
 
 })
 
-app.get("/customer/:customer_id", (req, res) => {
+app.get("/customer/:customer_id", (req: express.Request, res: express.Response) => {
     const customerId = req.params.customer_id;
 })
 
-app.get("/search", (req, res) => {
+app.get("/search", (req: express.Request, res: express.Response) => {
 
 })
 
 
 
-app.listen(SERVER_PORT, () => {
+app.listen(SERVER_PORT, async () => {
+    await northwindTradersModel.migrateDatabase();
+    await northwindTradersModel.fillDatabase();
+    
     console.log(`app is listening on ${SERVER_PORT} port.`)
 })
 
