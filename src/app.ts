@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import { northwindTradersModel } from './database';
 import * as schemas from 'schemas';
@@ -7,6 +8,7 @@ import * as schemas from 'schemas';
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 dotenv.config();
 
