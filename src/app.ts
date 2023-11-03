@@ -231,10 +231,12 @@ app.get("/employees", async (req: express.Request, res: express.Response) => {
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
     employeesObj = employeesObj.slice(minIdx, maxIdx + 1);
 
-    const partResponse = employeesObj.map((employeeObj) => { return { ...employeeObj, Name: employeeObj.firstName + " " + employeeObj.lastName } });
-    const response = partResponse.map((employeeObj) => filterObject(employeeObj,
-        ["employeeId", "Name", "title", "homePhone", "city", "country"],
-        { "title": "Title", "city": "City", "country": "Country", "homePhone": "Phone" }))
+    const response = employeesObj.map((employeeObj) => {
+        return {
+            employeeId: employeeObj.employeeId, Name: employeeObj.firstName + " " + employeeObj.lastName,
+            Title: employeeObj.title, City: employeeObj.city, Country: employeeObj.country, Phone: employeeObj.homePhone
+        }
+    });
     res.status(200).json(response);
 })
 
