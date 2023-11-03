@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 80;
 type DatabaseModelType =
     | typeof schemas.categories.$inferSelect
     | typeof schemas.customers.$inferSelect
-    | typeof schemas.employees.$inferSelect
+    | typeof schemas.employees.$inferSelect | typeof schemas.employees.$inferSelect & { Name: string }
     | typeof schemas.orderDetails.$inferSelect
     | typeof schemas.orders.$inferSelect
     | typeof schemas.products.$inferSelect
@@ -24,9 +24,10 @@ type DatabaseModelType =
     | typeof schemas.suppliers.$inferSelect
     | typeof schemas.territories.$inferSelect;
 
-function filterObject(obj: DatabaseModelType, fieldsToInclude: string[]): { [index: string]: number | string | null } {
+function filterObject(obj: DatabaseModelType, fieldsToInclude: string[], fieldsToChange: { [index: string]: string } = {}): { [index: string]: number | string | null } {
     const filteredEntries = Object.entries(obj).filter(([key, value]) => fieldsToInclude.includes(key));
-    const filteredObj = Object.fromEntries(filteredEntries);
+    const changedEntries = filteredEntries.map(([key, value]) => (key in fieldsToChange) ? [fieldsToChange[key], value] : [key, value])
+    const filteredObj = Object.fromEntries(changedEntries);
     return filteredObj;
 }
 
@@ -89,7 +90,8 @@ app.get("/suppliers", async (req: express.Request, res: express.Response) => {
     suppliersObj = suppliersObj.slice(minIdx, maxIdx + 1);
 
     const response = suppliersObj.map((supplierObj) => filterObject(supplierObj,
-        ["supplierId", "companyName", "contactName", "contactTitle", "city", "country"]))
+        ["supplierId", "companyName", "contactName", "contactTitle", "city", "country"],
+        { "companyName": "Company", "contactName": "Contact", "contactTitle": "Title", "city": "City", "country": "Country" }))
 
     res.status(200).json(response);
 })
@@ -110,7 +112,11 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
     }
 
     let response = filterObject(supplierObj,
-        ["supplierId", "companyName", "contactName", "contactTitle", "address", "city", "region", "postalCode", "country", "phone"]);
+        ["supplierId", "companyName", "contactName", "contactTitle", "address", "city", "region", "postalCode", "country", "phone"],
+        {
+            "companyName": "Company", "contactName": "Contact", "contactTitle": "Title",
+            "city": "City", "country": "Country", "address": "Address", "region": "Region", "postalCode": "PostalCode", "phone": "Phone"
+        });
 
     res.status(200).json(response);
 })
@@ -136,7 +142,8 @@ app.get("/products", async (req: express.Request, res: express.Response) => {
     productsObj = productsObj.slice(minIdx, maxIdx + 1);
 
     const response = productsObj.map((productObj) => filterObject(productObj,
-        ["productId", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder"]))
+        ["productId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder"],
+        { "productName": "Name", "quantityPerUnit": "Qt per unit", "unitPrice": "Price", "unitsInStock": "Stock", "unitsOnOrder": "Order" }))
 
     res.status(200).json(response);
 })
@@ -164,7 +171,8 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
     }
 
     let response = filterObject(productObj,
-        ["productId", "supplierId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder", "reorderLevel", "discontinued"]);
+        ["productId", "supplierId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder", "reorderLevel", "discontinued"],
+        { "productName": "Name", "quantityPerUnit": "Qt per unit", "unitPrice": "Price", "unitsInStock": "Stock", "unitsOnOrder": "Order" });
     response = { ...response, supplierName };
 
     res.status(200).json(response);
@@ -223,8 +231,10 @@ app.get("/employees", async (req: express.Request, res: express.Response) => {
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
     employeesObj = employeesObj.slice(minIdx, maxIdx + 1);
 
-    const response = employeesObj.map((employeeObj) => filterObject(employeeObj,
-        ["employeeId", "name", "title", "phone", "city", "country"]))
+    const partResponse = employeesObj.map((employeeObj) => { return { ...employeeObj, Name: employeeObj.firstName + " " + employeeObj.lastName } });
+    const response = partResponse.map((employeeObj) => filterObject(employeeObj,
+        ["employeeId", "Name", "title", "homePhone", "city", "country"],
+        { "title": "Title", "city": "City", "country": "Country", "homePhone": "Phone" }))
     res.status(200).json(response);
 })
 
@@ -271,7 +281,8 @@ app.get("/customers", async (req: express.Request, res: express.Response) => {
     }
 
     const response = customersObj.map((customerObj) => filterObject(customerObj,
-        ["customerId", "companyName", "contactName", "contactTitle", "city", "country"]))
+        ["customerId", "companyName", "contactName", "contactTitle", "city", "country"],
+        { "companyName": "Company", "contactName": "Contact", "contactTitle": "Title", "city": "City", "country": "Country" }))
     res.status(200).json(response);
 })
 
