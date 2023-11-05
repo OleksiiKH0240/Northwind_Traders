@@ -12,7 +12,7 @@ app.use(cors());
 
 dotenv.config();
 
-const PORT = process.env.PORT || 80;
+const PORT = Number(process.env.PORT) || 80;
 
 type DatabaseModelType =
     | typeof schemas.categories.$inferSelect
@@ -181,7 +181,7 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
 })
 
 app.get("/orders", async (req: express.Request, res: express.Response) => {
-    let ordersObj: typeof schemas.orders.$inferSelect[];
+    let ordersObj;
     try {
         ordersObj = await northwindTradersModel.getAllOrders();
     } catch (error) {
@@ -201,16 +201,26 @@ app.get("/orders", async (req: express.Request, res: express.Response) => {
     ordersObj = ordersObj.slice(minIdx, maxIdx + 1);
     console.log(ordersObj)
 
-    const response = ordersObj.map((orderObj) => filterObject(orderObj,
-        ["orderId", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder"]))
-
-    res.status(200).json(response);
+    res.status(200).json(ordersObj);
     // res.status(200).send("not_ready_yet");
 })
 
-app.get("/order/:order_id", (req: express.Request, res: express.Response) => {
-    const orderId = req.params.order_id;
-    res.status(200).send("not_ready_yet");
+app.get("/order/:order_id", async (req: express.Request, res: express.Response) => {
+    const orderId = Number(req.params.order_id);
+    if (Number.isNaN(orderId)) {
+        res.status(400).send("wrong format of orderId");
+        return;
+    }
+
+    try {
+        const orderObj = await northwindTradersModel.getOrderById(orderId);
+        res.status(200).json(orderObj);
+    } catch (error) {
+        res.status(500).send("something went wrong on the server side.");
+        return;
+    }
+
+    
 })
 
 app.get("/employees", async (req: express.Request, res: express.Response) => {
@@ -308,8 +318,25 @@ app.get("/customer/:customer_id", async (req: express.Request, res: express.Resp
     res.status(200).json(customerObj);
 })
 
-app.get("/search", (req: express.Request, res: express.Response) => {
-    res.status(200).send("not_ready_yet");
+app.get("/search", async (req: express.Request, res: express.Response) => {
+    const tableName = String(req.query.tblName);
+    const searchText = String(req.query.SearchText).toLowerCase();
+
+    let result;
+    if (tableName == "Customers" && searchText != "undefined") {
+        result = await northwindTradersModel.getCustomersByCompanyName(searchText);
+    }
+    else if (tableName == "Products" && searchText != "undefined") {
+        result = await northwindTradersModel.getProductsByName(searchText);
+    }
+    else {
+        res.sendStatus(200);
+        return;
+    }
+
+    res.status(200).json(result);
+
+    // res.status(200).send("not_ready_yet");
 })
 
 
@@ -317,6 +344,10 @@ app.get("/search", (req: express.Request, res: express.Response) => {
 app.listen(PORT, "0.0.0.0", async () => {
     await northwindTradersModel.migrateDatabase();
     await northwindTradersModel.fillDatabase();
+
+    // await northwindTradersModel.getProductsByName("ch");
+    // console.log(await northwindTradersModel.getCustomersByCompanyName("an"))
+    // await northwindTradersModel.getAllOrders();
 
     console.log(`app is listening on ${PORT} port.`)
 })

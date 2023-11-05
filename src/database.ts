@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { sql, eq } from 'drizzle-orm';
+import { sql, eq, like } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js/driver';
 import * as schemas from './schemas';
 import postgres from 'postgres';
@@ -120,6 +120,31 @@ class NorthwindTradersModel {
         return result[0];
     }
 
+    async getCustomersByCompanyName(companyName: string): Promise<{
+        customerId: string,
+        companyName: string,
+        contactName: string,
+        contactTitle: string,
+        phone: string
+    }[]> {
+        const queryResult = await this.dbClient.execute(sql.raw(`
+        select customer_id, company_name, contact_name, contact_title, phone
+        from ${POSTGRES_DB}.customers
+        where lower(company_name) like '%${companyName}%';`));
+
+        const result = queryResult.map((customerObj) => {
+            return {
+                customerId: String(customerObj.customer_id),
+                companyName: String(customerObj.company_name),
+                contactName: String(customerObj.contact_name),
+                contactTitle: String(customerObj.contact_title),
+                phone: String(customerObj.phone)
+            };
+        })
+
+        return result;
+    }
+
     async getAllSuppliers(): Promise<Array<typeof schemas.suppliers.$inferSelect>> {
         const result = await this.dbClient.select().from(schemas.suppliers);
         return result;
@@ -140,17 +165,165 @@ class NorthwindTradersModel {
         return result[0];
     }
 
-    async getAllOrders(): Promise<Array<typeof schemas.orders.$inferSelect>> {
-        const result = await this.dbClient.select().from(schemas.orders);
+    async getProductsByName(productName: string): Promise<{
+        productId: number,
+        productName: string,
+        quantityPerUnit: string,
+        unitPrice: number,
+        unitsInStock: number
+    }[]> {
+        const queryResult = await this.dbClient.execute(sql.raw(`
+        select product_id, product_name, quantity_per_unit, units_in_stock
+        from ${POSTGRES_DB}.products
+        where lower(product_name) like '%${productName}%';`));
+        const result = queryResult.map((productObj) => {
+            return {
+                productId: Number(productObj.product_id),
+                productName: String(productObj.product_name),
+                quantityPerUnit: String(productObj.quantity_per_unit),
+                unitPrice: Number(productObj.unit_price),
+                unitsInStock: Number(productObj.units_in_stock)
+            };
+        })
+
         return result;
     }
 
-    async getOrderById(orderId: number): Promise<typeof schemas.orders.$inferSelect> {
-        const result = await this.dbClient.select().from(schemas.orders).where(eq(schemas.orders.orderId, orderId));
-        return result[0];
+    async getAllOrders(): Promise<{
+        orderId: number,
+        TotalPrice: number,
+        Products: number,
+        Quantity: number,
+        Shipped: string,
+        ShipName: string,
+        City: string,
+        Country: string
+    }[]> {
+        const queryResult = await this.dbClient.execute(sql.raw(`
+        select orders.order_id,
+            total_price,
+            products,
+            quantity,
+            shipped_date,
+            ship_name,
+            ship_city,
+            ship_country
+        from (select order_id,
+            sum(order_details.unit_price * order_details.quantity) AS total_price,
+            count(order_details.order_id)                                            AS products,
+            sum(order_details.quantity)                                              AS quantity
+
+            from ${POSTGRES_DB}.order_details
+            group by ${POSTGRES_DB}.order_details.order_id) orders_numbers
+        left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id;`))
+        // console.log(queryResult);
+        const result = queryResult.map((orderObj) => {
+            return {
+                orderId: Number(orderObj.order_id),
+                TotalPrice: Number(orderObj.total_price),
+                Products: Number(orderObj.products),
+                Quantity: Number(orderObj.quantity),
+                Shipped: String(orderObj.shipped_date),
+                ShipName: String(orderObj.ship_name),
+                City: String(orderObj.ship_city),
+                Country: String(orderObj.ship_country)
+            }
+        })
+
+        return result;
+    }
+
+    async getOrderById(orderId: number): Promise<{
+        orderId: number,
+        TotalPrice: number,
+        TotalProducts: number,
+        TotalQuantity: number,
+        TotalDiscount: number,
+        customerId: string,
+        ShippedDate: string,
+        ShipName: string,
+        ShipCity: string,
+        ShipRegion: string,
+        ShipPostalCode: string,
+        ShipCountry: string,
+        ProductsInOrder: {
+            productId: number,
+            Product: string,
+            Quantity: number,
+            OrderPrice: number,
+            TotalPrice: number,
+            Discount: number
+        }[]
+    }[] | {}> {
+        const queryResult = await this.dbClient.execute(sql.raw(`
+        select orders.order_id,
+        total_price,
+        total_products,
+        total_quantity,
+        total_discount,
+        customer_id,
+        shipped_date,
+        ship_name,
+        ship_city,
+        ship_region,
+        ship_postal_code,
+        ship_country,
+        p.product_id,
+        product_name,
+        quantity,
+        od.unit_price               as order_price,
+        od.unit_price * od.quantity as price,
+        od.discount
+
+        from (select order_id,
+              sum(order_details.unit_price * order_details.quantity) AS total_price,
+              sum(order_details.unit_price * order_details.quantity *
+                 order_details.discount)                            AS total_discount,
+              count(order_details.order_id)                          AS total_products,
+              sum(order_details.quantity)                            AS total_quantity
+
+              from ${POSTGRES_DB}.order_details
+              group by ${POSTGRES_DB}.order_details.order_id) orders_numbers
+         left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id
+         left join ${POSTGRES_DB}.order_details od on orders.order_id = od.order_id
+         left join ${POSTGRES_DB}.products p on p.product_id = od.product_id
+        where orders.order_id = ${orderId};`));
+
+        if (queryResult.length == 0) return {};
+
+        const orderObj = queryResult[0];
+        const orderResult = {
+            orderId: Number(orderObj.order_id),
+            TotalPrice: Number(orderObj.total_price),
+            TotalProducts: Number(orderObj.total_products),
+            TotalQuantity: Number(orderObj.total_quantity),
+            TotalDiscount: Number(orderObj.total_discount),
+            customerId: String(orderObj.customer_id),
+            ShippedDate: String(orderObj.shipped_date),
+            ShipName: String(orderObj.ship_name),
+            ShipCity: String(orderObj.ship_city),
+            ShipRegion: String(orderObj.ship_region),
+            ShipPostalCode: String(orderObj.ship_postal_code),
+            ShipCountry: String(orderObj.ship_country)
+        };
+
+        const productsInOrder = queryResult.map((orderObj) => {
+            return {
+                productId: Number(orderObj.product_id),
+                Product: String(orderObj.product_name),
+                Quantity: Number(orderObj.quantity),
+                OrderPrice: Number(orderObj.order_price),
+                TotalPrice: Number(orderObj.price),
+                Discount: Number(orderObj.discount)
+            };
+        });
+
+        const result = { ...orderResult, ProductsInOrder: productsInOrder };
+        return result;
     }
 }
 
 
 export const northwindTradersModel = new NorthwindTradersModel();
-// console.log(await northwindTradersModel.getAllEmployees());
+
+
