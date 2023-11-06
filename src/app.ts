@@ -173,7 +173,7 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
         const supplierObj = await northwindTradersModel.getSupplierById(productObj.supplierId);
         supplierName = supplierObj.companyName;
     }
-    
+
 
     let response = filterObject(productObj,
         ["productId", "supplierId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder", "reorderLevel", "discontinued"],
@@ -282,7 +282,7 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
         reportsToEmployeeName = reportsToEmployee.firstName + " " + reportsToEmployee.lastName;
     }
 
-    const response = {
+    const partResponse = {
         employeeId: employeeObj.employeeId,
         Name: employeeObj.firstName + " " + employeeObj.lastName,
         Title: employeeObj.title,
@@ -295,10 +295,22 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
         "Country": employeeObj.country,
         "Home Phone": employeeObj.homePhone,
         Extension: employeeObj.extension,
-        Notes: employeeObj.notes,
-        "Reports To": reportsToEmployeeName,
-        reportsId: employeeObj.reportsTo
+        Notes: employeeObj.notes
     };
+
+    let response;
+    if (employeeObj.reportsTo) {
+        response = {
+            ...partResponse,
+            "Reports To": reportsToEmployeeName,
+            reportsId: employeeObj.reportsTo
+        }
+    }
+    else{
+        response = partResponse;
+    }
+
+    // console.log(response);
     res.status(200).json(response);
 })
 
@@ -340,6 +352,7 @@ app.get("/customer/:customer_id", async (req: express.Request, res: express.Resp
         return;
     }
     const response = {
+        customerId: customerObj.customerId,
         "Company Name": customerObj.companyName,
         "Contact Name": customerObj.contactName,
         "Contact Title": customerObj.contactTitle,
