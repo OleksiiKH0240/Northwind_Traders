@@ -173,6 +173,7 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
         const supplierObj = await northwindTradersModel.getSupplierById(productObj.supplierId);
         supplierName = supplierObj.companyName;
     }
+    
 
     let response = filterObject(productObj,
         ["productId", "supplierId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder", "reorderLevel", "discontinued"],
@@ -180,7 +181,7 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
             "productName": "Product Name", "quantityPerUnit": "Quantity Per Unit", "unitPrice": "Unit Price", "unitsInStock": "Units In Stock",
             "unitsOnOrder": "Units In Order", "reorderLevel": "Reorder Level", "discontinued": "Discontinued"
         });
-    response = { ...response, supplierName };
+    response = { ...response, "Name": supplierName };
 
     res.status(200).json(response);
 })
@@ -282,6 +283,7 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
     }
 
     const response = {
+        employeeId: employeeObj.employeeId,
         Name: employeeObj.firstName + " " + employeeObj.lastName,
         Title: employeeObj.title,
         "Title Of Courtesy": employeeObj.titleOfCourtesy,
