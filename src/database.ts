@@ -235,7 +235,6 @@ class NorthwindTradersModel {
     }
 
     async getOrderById(orderId: number): Promise<{
-        Id: number,
         "Total Price": number,
         "Total Products": number,
         "Total Quantity": number,
@@ -245,6 +244,7 @@ class NorthwindTradersModel {
         "Ship Via": string,
         "Freight": string,
         "Required Date": string,
+        "Order Date": string,
         "Ship Name": string,
         "Ship City": string,
         "Ship Region": string,
@@ -268,6 +268,7 @@ class NorthwindTradersModel {
         orders.customer_id,
         s.company_name as ship_via_name,
         freight,
+        order_date,
         shipped_date,
         required_date,
         ship_name,
@@ -299,20 +300,20 @@ class NorthwindTradersModel {
         where orders.order_id = ${orderId};`));
 
         if (queryResult.length == 0) return null;
-
+        
         const orderObj = queryResult[0];
         const orderResult = {
-            Id: Number(orderObj.order_id),
-            "Total Price": Number(orderObj.total_price),
+            "Customer Id": String(orderObj.customer_id),
+            "Ship Name": String(orderObj.ship_name),
             "Total Products": Number(orderObj.total_products),
             "Total Quantity": Number(orderObj.total_quantity),
+            "Total Price": Number(orderObj.total_price),
             "Total Discount": Number(orderObj.total_discount),
-            "Customer Id": String(orderObj.customer_id),
             "Ship Via": String(orderObj.ship_via_name),
             "Freight": String(orderObj.freight),
-            "Shipped Date": String(orderObj.shipped_date),
+            "Order Date": String(orderObj.order_date),
             "Required Date": String(orderObj.required_date),
-            "Ship Name": String(orderObj.ship_name),
+            "Shipped Date": String(orderObj.shipped_date),
             "Ship City": String(orderObj.ship_city),
             "Ship Region": String(orderObj.ship_region),
             "Ship Postal Code": String(orderObj.ship_postal_code),
