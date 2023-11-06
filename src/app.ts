@@ -350,7 +350,7 @@ app.get("/customer/:customer_id", async (req: express.Request, res: express.Resp
         Fax: customerObj.fax
     }
 
-    res.status(200).json(customerObj);
+    res.status(200).json(response);
 })
 
 app.get("/search", async (req: express.Request, res: express.Response) => {
