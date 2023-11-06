@@ -114,12 +114,23 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
         return;
     }
 
-    let response = filterObject(supplierObj,
+    const partResponse = filterObject(supplierObj,
         ["supplierId", "companyName", "contactName", "contactTitle", "address", "city", "region", "postalCode", "country", "phone"],
         {
             "companyName": "Company Name", "contactName": "Contact Name", "contactTitle": "Contact Title",
             "city": "City", "country": "Country", "address": "Address", "region": "Region", "postalCode": "Postal Code", "phone": "Phone"
         });
+
+    let response;
+    if (supplierObj.homePage) {
+        response = {
+            ...partResponse,
+            "Home Page": supplierObj.homePage
+        };
+    }
+    else{
+        response = partResponse;
+    }
 
     res.status(200).json(response);
 })
