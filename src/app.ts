@@ -186,6 +186,7 @@ app.get("/orders", async (req: express.Request, res: express.Response) => {
         ordersObj = await northwindTradersModel.getAllOrders();
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 
@@ -217,6 +218,7 @@ app.get("/order/:order_id", async (req: express.Request, res: express.Response) 
         res.status(200).json(orderObj);
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 

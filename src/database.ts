@@ -261,11 +261,11 @@ class NorthwindTradersModel {
         total_products,
         total_quantity,
         total_discount,
-        customer_id,
+        orders.customer_id,
         shipped_date,
         ship_name,
         ship_city,
-        ship_region,
+        (case when (ship_region is not null) then ship_region else region end) as ship_region,
         ship_postal_code,
         ship_country,
         p.product_id,
@@ -287,6 +287,7 @@ class NorthwindTradersModel {
          left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id
          left join ${POSTGRES_DB}.order_details od on orders.order_id = od.order_id
          left join ${POSTGRES_DB}.products p on p.product_id = od.product_id
+         left join ${POSTGRES_DB}.customers c on c.customer_id = orders.customer_id
         where orders.order_id = ${orderId};`));
 
         if (queryResult.length == 0) return {};
