@@ -173,9 +173,10 @@ class NorthwindTradersModel {
         unitsInStock: number
     }[]> {
         const queryResult = await this.dbClient.execute(sql.raw(`
-        select product_id, product_name, quantity_per_unit, units_in_stock
+        select product_id, product_name, quantity_per_unit, unit_price, units_in_stock
         from ${POSTGRES_DB}.products
         where lower(product_name) like '%${productName}%';`));
+        console.log(queryResult);
         const result = queryResult.map((productObj) => {
             return {
                 productId: Number(productObj.product_id),
@@ -190,12 +191,12 @@ class NorthwindTradersModel {
     }
 
     async getAllOrders(): Promise<{
-        orderId: number,
-        TotalPrice: number,
+        Id: number,
+        "Total Price": number,
         Products: number,
         Quantity: number,
         Shipped: string,
-        ShipName: string,
+        "Ship Name": string,
         City: string,
         Country: string
     }[]> {
@@ -219,12 +220,12 @@ class NorthwindTradersModel {
         // console.log(queryResult);
         const result = queryResult.map((orderObj) => {
             return {
-                orderId: Number(orderObj.order_id),
-                TotalPrice: Number(orderObj.total_price),
+                Id: Number(orderObj.order_id),
+                "Total Price": Number(orderObj.total_price),
                 Products: Number(orderObj.products),
                 Quantity: Number(orderObj.quantity),
                 Shipped: String(orderObj.shipped_date),
-                ShipName: String(orderObj.ship_name),
+                "Ship Name": String(orderObj.ship_name),
                 City: String(orderObj.ship_city),
                 Country: String(orderObj.ship_country)
             }
@@ -234,14 +235,14 @@ class NorthwindTradersModel {
     }
 
     async getOrderById(orderId: number): Promise<{
-        orderId: number,
-        TotalPrice: number,
+        Id: number,
+        "Total Price": number,
         TotalProducts: number,
         TotalQuantity: number,
         TotalDiscount: number,
         customerId: string,
         ShippedDate: string,
-        ShipName: string,
+        "Ship Name": string,
         ShipCity: string,
         ShipRegion: string,
         ShipPostalCode: string,
@@ -254,7 +255,7 @@ class NorthwindTradersModel {
             TotalPrice: number,
             Discount: number
         }[]
-    }[] | {}> {
+    } | null> {
         const queryResult = await this.dbClient.execute(sql.raw(`
         select orders.order_id,
         total_price,
@@ -290,18 +291,18 @@ class NorthwindTradersModel {
          left join ${POSTGRES_DB}.customers c on c.customer_id = orders.customer_id
         where orders.order_id = ${orderId};`));
 
-        if (queryResult.length == 0) return {};
+        if (queryResult.length == 0) return null;
 
         const orderObj = queryResult[0];
         const orderResult = {
-            orderId: Number(orderObj.order_id),
-            TotalPrice: Number(orderObj.total_price),
+            Id: Number(orderObj.order_id),
+            "Total Price": Number(orderObj.total_price),
             TotalProducts: Number(orderObj.total_products),
             TotalQuantity: Number(orderObj.total_quantity),
             TotalDiscount: Number(orderObj.total_discount),
             customerId: String(orderObj.customer_id),
             ShippedDate: String(orderObj.shipped_date),
-            ShipName: String(orderObj.ship_name),
+            "Ship Name": String(orderObj.ship_name),
             ShipCity: String(orderObj.ship_city),
             ShipRegion: String(orderObj.ship_region),
             ShipPostalCode: String(orderObj.ship_postal_code),

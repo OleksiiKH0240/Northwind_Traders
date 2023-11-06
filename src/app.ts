@@ -77,19 +77,20 @@ app.get("/suppliers", async (req: express.Request, res: express.Response) => {
         suppliersObj = await northwindTradersModel.getAllSuppliers();
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 
     const maxPageNumber = Math.ceil(suppliersObj.length / MAX_ITEMS_PER_PAGE);
     const pageNumber: number = Number(req.query.page || 1);
-    if (pageNumber > maxPageNumber || pageNumber < 0) {
-        res.status(200).send("No results");
-        return;
-    }
+    // if (pageNumber > maxPageNumber || pageNumber < 0) {
+    //     res.status(200).send("No results");
+    //     return;
+    // }
 
     const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
-    suppliersObj = suppliersObj.slice(minIdx, maxIdx + 1);
+    // suppliersObj = suppliersObj.slice(minIdx, maxIdx + 1);
 
     const response = suppliersObj.map((supplierObj) => filterObject(supplierObj,
         ["supplierId", "companyName", "contactName", "contactTitle", "city", "country"],
@@ -129,19 +130,20 @@ app.get("/products", async (req: express.Request, res: express.Response) => {
         productsObj = await northwindTradersModel.getAllProducts();
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 
     const maxPageNumber = Math.ceil(productsObj.length / MAX_ITEMS_PER_PAGE);
     const pageNumber: number = Number(req.query.page || 1);
-    if (pageNumber > maxPageNumber || pageNumber < 0) {
-        res.status(200).send("No results");
-        return;
-    }
+    // if (pageNumber > maxPageNumber || pageNumber < 0) {
+    //     res.status(200).send("No results");
+    //     return;
+    // }
 
     const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
-    productsObj = productsObj.slice(minIdx, maxIdx + 1);
+    // productsObj = productsObj.slice(minIdx, maxIdx + 1);
 
     const response = productsObj.map((productObj) => filterObject(productObj,
         ["productId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder"],
@@ -192,18 +194,17 @@ app.get("/orders", async (req: express.Request, res: express.Response) => {
 
     const maxPageNumber = Math.ceil(ordersObj.length / MAX_ITEMS_PER_PAGE);
     const pageNumber: number = Number(req.query.page || 1);
-    if (pageNumber > maxPageNumber || pageNumber < 0) {
-        res.status(200).send("No results");
-        return;
-    }
+    // if (pageNumber > maxPageNumber || pageNumber < 0) {
+    //     res.status(200).send("No results");
+    //     return;
+    // }
 
     const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
-    ordersObj = ordersObj.slice(minIdx, maxIdx + 1);
-    console.log(ordersObj)
+    // ordersObj = ordersObj.slice(minIdx, maxIdx + 1);
+    
 
     res.status(200).json(ordersObj);
-    // res.status(200).send("not_ready_yet");
 })
 
 app.get("/order/:order_id", async (req: express.Request, res: express.Response) => {
@@ -231,19 +232,20 @@ app.get("/employees", async (req: express.Request, res: express.Response) => {
         employeesObj = await northwindTradersModel.getAllEmployees();
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 
     const maxPageNumber = Math.ceil(employeesObj.length / MAX_ITEMS_PER_PAGE);
     const pageNumber: number = Number(req.query.page || 1);
-    if (pageNumber > maxPageNumber || pageNumber < 0) {
-        res.status(200).send("No results");
-        return;
-    }
+    // if (pageNumber > maxPageNumber || pageNumber < 0) {
+    //     res.status(200).send("No results");
+    //     return;
+    // }
 
     const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
-    employeesObj = employeesObj.slice(minIdx, maxIdx + 1);
+    // employeesObj = employeesObj.slice(minIdx, maxIdx + 1);
 
     const response = employeesObj.map((employeeObj) => {
         return {
@@ -286,15 +288,16 @@ app.get("/customers", async (req: express.Request, res: express.Response) => {
         customersObj = await northwindTradersModel.getAllCustomers();
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 
     const maxPageNumber = Math.ceil(customersObj.length / MAX_ITEMS_PER_PAGE);
     const pageNumber: number = Number(req.query.page || 1);
-    if (pageNumber > maxPageNumber || pageNumber < 0) {
-        res.status(200).send("No results");
-        return;
-    }
+    // if (pageNumber > maxPageNumber || pageNumber < 0) {
+    //     res.status(200).send("No results");
+    //     return;
+    // }
 
     const response = customersObj.map((customerObj) => filterObject(customerObj,
         ["customerId", "companyName", "contactName", "contactTitle", "city", "country"],
