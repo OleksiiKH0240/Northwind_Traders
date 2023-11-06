@@ -117,8 +117,8 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
     let response = filterObject(supplierObj,
         ["supplierId", "companyName", "contactName", "contactTitle", "address", "city", "region", "postalCode", "country", "phone"],
         {
-            "companyName": "Company", "contactName": "Contact", "contactTitle": "Title",
-            "city": "City", "country": "Country", "address": "Address", "region": "Region", "postalCode": "PostalCode", "phone": "Phone"
+            "companyName": "Company Name", "contactName": "Contact Name", "contactTitle": "Contact Title",
+            "city": "City", "country": "Country", "address": "Address", "region": "Region", "postalCode": "Postal Code", "phone": "Phone"
         });
 
     res.status(200).json(response);
@@ -176,7 +176,10 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
 
     let response = filterObject(productObj,
         ["productId", "supplierId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder", "reorderLevel", "discontinued"],
-        { "productName": "Name", "quantityPerUnit": "Qt per unit", "unitPrice": "Price", "unitsInStock": "Stock", "unitsOnOrder": "Order" });
+        {
+            "productName": "Product Name", "quantityPerUnit": "Quantity Per Unit", "unitPrice": "Unit Price", "unitsInStock": "Units In Stock",
+            "unitsOnOrder": "Units In Order", "reorderLevel": "Reorder Level", "discontinued": "Discontinued"
+        });
     response = { ...response, supplierName };
 
     res.status(200).json(response);
@@ -202,7 +205,7 @@ app.get("/orders", async (req: express.Request, res: express.Response) => {
     const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
     const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
     // ordersObj = ordersObj.slice(minIdx, maxIdx + 1);
-    
+
 
     res.status(200).json(ordersObj);
 })
@@ -223,7 +226,7 @@ app.get("/order/:order_id", async (req: express.Request, res: express.Response) 
         return;
     }
 
-    
+
 })
 
 app.get("/employees", async (req: express.Request, res: express.Response) => {
@@ -278,7 +281,22 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
         reportsToEmployeeName = reportsToEmployee.firstName + " " + reportsToEmployee.lastName;
     }
 
-    const response = { ...employeeObj, reportsToEmployeeName };
+    const response = {
+        Name: employeeObj.firstName + " " + employeeObj.lastName,
+        Title: employeeObj.title,
+        "Title Of Courtesy": employeeObj.titleOfCourtesy,
+        "Birth Date": employeeObj.birthDate,
+        "Hire Date": employeeObj.hireDate,
+        Address: employeeObj.address,
+        City: employeeObj.city,
+        "Postal Code": employeeObj.postalCode,
+        "Country": employeeObj.country,
+        "Home Phone": employeeObj.homePhone,
+        Extension: employeeObj.extension,
+        Notes: employeeObj.notes,
+        "Reports To": reportsToEmployeeName,
+        reportsId: employeeObj.reportsTo
+    };
     res.status(200).json(response);
 })
 
@@ -318,6 +336,18 @@ app.get("/customer/:customer_id", async (req: express.Request, res: express.Resp
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         return;
+    }
+    const response = {
+        "Company Name": customerObj.companyName,
+        "Contact Name": customerObj.contactName,
+        "Contact Title": customerObj.contactTitle,
+        Address: customerObj.address,
+        City: customerObj.city,
+        "Postal Code": customerObj.postalCode,
+        Region: customerObj.region,
+        Country: customerObj.country,
+        Phone: customerObj.phone,
+        Fax: customerObj.fax
     }
 
     res.status(200).json(customerObj);

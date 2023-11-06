@@ -237,22 +237,25 @@ class NorthwindTradersModel {
     async getOrderById(orderId: number): Promise<{
         Id: number,
         "Total Price": number,
-        TotalProducts: number,
-        TotalQuantity: number,
-        TotalDiscount: number,
-        customerId: string,
-        ShippedDate: string,
+        "Total Products": number,
+        "Total Quantity": number,
+        "Total Discount": number,
+        "Customer Id": string,
+        "Shipped Date": string,
+        "Ship Via": string,
+        "Freight": string,
+        "Required Date": string,
         "Ship Name": string,
-        ShipCity: string,
-        ShipRegion: string,
-        ShipPostalCode: string,
-        ShipCountry: string,
+        "Ship City": string,
+        "Ship Region": string,
+        "Ship Postal Code": string,
+        "Ship Country": string,
         ProductsInOrder: {
             productId: number,
             Product: string,
             Quantity: number,
-            OrderPrice: number,
-            TotalPrice: number,
+            "Order Price": number,
+            "Total Price": number,
             Discount: number
         }[]
     } | null> {
@@ -263,7 +266,10 @@ class NorthwindTradersModel {
         total_quantity,
         total_discount,
         orders.customer_id,
+        s.company_name as ship_via_name,
+        freight,
         shipped_date,
+        required_date,
         ship_name,
         ship_city,
         (case when (ship_region is not null) then ship_region else region end) as ship_region,
@@ -289,6 +295,7 @@ class NorthwindTradersModel {
          left join ${POSTGRES_DB}.order_details od on orders.order_id = od.order_id
          left join ${POSTGRES_DB}.products p on p.product_id = od.product_id
          left join ${POSTGRES_DB}.customers c on c.customer_id = orders.customer_id
+         left join ${POSTGRES_DB}.shippers s on s.shipper_id = orders.ship_via
         where orders.order_id = ${orderId};`));
 
         if (queryResult.length == 0) return null;
@@ -297,16 +304,19 @@ class NorthwindTradersModel {
         const orderResult = {
             Id: Number(orderObj.order_id),
             "Total Price": Number(orderObj.total_price),
-            TotalProducts: Number(orderObj.total_products),
-            TotalQuantity: Number(orderObj.total_quantity),
-            TotalDiscount: Number(orderObj.total_discount),
-            customerId: String(orderObj.customer_id),
-            ShippedDate: String(orderObj.shipped_date),
+            "Total Products": Number(orderObj.total_products),
+            "Total Quantity": Number(orderObj.total_quantity),
+            "Total Discount": Number(orderObj.total_discount),
+            "Customer Id": String(orderObj.customer_id),
+            "Ship Via": String(orderObj.ship_via_name),
+            "Freight": String(orderObj.freight),
+            "Shipped Date": String(orderObj.shipped_date),
+            "Required Date": String(orderObj.required_date),
             "Ship Name": String(orderObj.ship_name),
-            ShipCity: String(orderObj.ship_city),
-            ShipRegion: String(orderObj.ship_region),
-            ShipPostalCode: String(orderObj.ship_postal_code),
-            ShipCountry: String(orderObj.ship_country)
+            "Ship City": String(orderObj.ship_city),
+            "Ship Region": String(orderObj.ship_region),
+            "Ship Postal Code": String(orderObj.ship_postal_code),
+            "Ship Country": String(orderObj.ship_country)
         };
 
         const productsInOrder = queryResult.map((orderObj) => {
@@ -314,8 +324,8 @@ class NorthwindTradersModel {
                 productId: Number(orderObj.product_id),
                 Product: String(orderObj.product_name),
                 Quantity: Number(orderObj.quantity),
-                OrderPrice: Number(orderObj.order_price),
-                TotalPrice: Number(orderObj.price),
+                "Order Price": Number(orderObj.order_price),
+                "Total Price": Number(orderObj.price),
                 Discount: Number(orderObj.discount)
             };
         });
