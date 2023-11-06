@@ -181,7 +181,18 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
             "productName": "Product Name", "quantityPerUnit": "Quantity Per Unit", "unitPrice": "Unit Price", "unitsInStock": "Units In Stock",
             "unitsOnOrder": "Units In Order", "reorderLevel": "Reorder Level", "discontinued": "Discontinued"
         });
-    response = { ...response, "Name": supplierName };
+    response = {
+        productId: productObj.productId,
+        "Supplier": supplierName,
+        "Product Name": productObj.productName,
+        supplierId: productObj.supplierId,
+        "Quantity Per Unit": productObj.quantityPerUnit,
+        "Unit Price": productObj.unitPrice,
+        "Units In Stock": productObj.unitsInStock,
+        "Units In Order": productObj.unitsOnOrder,
+        "Reorder Level": productObj.reorderLevel,
+        "Discontinued": productObj.discontinued
+    };
 
     res.status(200).json(response);
 })
@@ -306,7 +317,7 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
             reportsId: employeeObj.reportsTo
         }
     }
-    else{
+    else {
         response = partResponse;
     }
 
