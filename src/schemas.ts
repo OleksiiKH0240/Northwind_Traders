@@ -1,5 +1,6 @@
-import { serial, text, varchar, integer, numeric, date, pgTable, pgSchema } from 'drizzle-orm/pg-core';
+import { serial, text, varchar, integer, numeric, date, timestamp, time, pgSchema } from 'drizzle-orm/pg-core';
 import dotenv from 'dotenv';
+
 
 
 dotenv.config();
@@ -11,6 +12,21 @@ if (POSTGRES_DB === undefined) {
 }
 
 export const mySchema = pgSchema(POSTGRES_DB);
+
+export const sqlMetrics = mySchema.table('sql_metrics', {
+    queryCount: numeric('query_count'),
+    resultsCount: numeric('results_count'),
+    select: text('select'),
+    selectWhere: text('select_where'),
+    selectWhereJoin: text('select_where_join')
+})
+
+// export const ActivityLog = mySchema.table('activity_log', {
+//     logId: serial('log_id').primaryKey(),
+//     dt: timestamp('dt'),
+//     productVersion: text('product_version'),
+//     queryTime: time('query_time')
+// })
 
 export const employees = mySchema.table('employees', {
     employeeId: serial('employee_id').primaryKey(),

@@ -5,11 +5,12 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js/driver';
 import * as schemas from './schemas';
 import postgres from 'postgres';
 import donenv from 'dotenv';
+import { time } from 'drizzle-orm/mysql-core';
 
 
 donenv.config();
 
-const { POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_HOST, POSTGRES_PORT, ENDPOINT_ID } = process.env;
+const { POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_HOST, POSTGRES_PORT, ENDPOINT_ID, PRODUCT_VERSION } = process.env;
 
 const POSTGRES_URL = `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`;
 
@@ -145,9 +146,13 @@ class NorthwindTradersModel {
         return result;
     }
 
-    async getAllSuppliers(): Promise<Array<typeof schemas.suppliers.$inferSelect>> {
+    async getAllSuppliers(): Promise<{ dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: Array<typeof schemas.suppliers.$inferSelect> }> {
+        const start = Date.now();
         const result = await this.dbClient.select().from(schemas.suppliers);
-        return result;
+        const end = Date.now();
+
+        const sqlQuery = `select supplier_id as supplierId, company_name as Company, contact_name as Contact, contact_title as Title, city as City, country as Country from ${POSTGRES_DB}.suppliers;`
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
     async getSupplierById(supplierId: number): Promise<typeof schemas.suppliers.$inferSelect> {
@@ -155,9 +160,13 @@ class NorthwindTradersModel {
         return result[0];
     }
 
-    async getAllProducts(): Promise<Array<typeof schemas.products.$inferSelect>> {
+    async getAllProducts(): Promise<{ dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: Array<typeof schemas.products.$inferSelect> }> {
+        const start = Date.now();
         const result = await this.dbClient.select().from(schemas.products);
-        return result;
+        const end = Date.now();
+
+        const sqlQuery = `select product_id as productId, product_name as Name, quantity_per_unit as "Qt per unit", unit_price as Price, units_in_stock as Stock, units_on_order as Order from ${POSTGRES_DB}.products;`
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
     async getProductById(productId: number): Promise<typeof schemas.products.$inferSelect> {
@@ -300,7 +309,7 @@ class NorthwindTradersModel {
         where orders.order_id = ${orderId};`));
 
         if (queryResult.length == 0) return null;
-        
+
         const orderObj = queryResult[0];
         const orderResult = {
             "Customer Id": String(orderObj.customer_id),

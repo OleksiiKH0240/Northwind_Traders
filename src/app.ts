@@ -9,6 +9,14 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
+// app.use(session({
+//     secret: "some secret",
+//     resave: true,
+//     saveUninitialized: true,
+//     unset: 'destroy',
+//     cookie: { path: "/", httpOnly: true, sameSite: 'lax' }
+// }));
+
 
 dotenv.config();
 
@@ -32,6 +40,7 @@ function filterObject(obj: DatabaseModelType, fieldsToInclude: string[], fieldsT
     const filteredObj = Object.fromEntries(changedEntries);
     return filteredObj;
 }
+
 
 app.get("/", async (req: express.Request, res: express.Response) => {
     res.status(200).send("healthy");
@@ -72,31 +81,29 @@ app.get("/dash", (req: express.Request, res: express.Response) => {
 const MAX_ITEMS_PER_PAGE = 20;
 
 app.get("/suppliers", async (req: express.Request, res: express.Response) => {
-    let suppliersObj: typeof schemas.suppliers.$inferSelect[];
+    let dbResponse, suppliersObj;
     try {
-        suppliersObj = await northwindTradersModel.getAllSuppliers();
+        dbResponse = await northwindTradersModel.getAllSuppliers();
+        suppliersObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         console.log(error);
         return;
     }
 
-    const maxPageNumber = Math.ceil(suppliersObj.length / MAX_ITEMS_PER_PAGE);
-    const pageNumber: number = Number(req.query.page || 1);
-    // if (pageNumber > maxPageNumber || pageNumber < 0) {
-    //     res.status(200).send("No results");
-    //     return;
-    // }
-
-    const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
-    const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
-    // suppliersObj = suppliersObj.slice(minIdx, maxIdx + 1);
-
     const response = suppliersObj.map((supplierObj) => filterObject(supplierObj,
         ["supplierId", "companyName", "contactName", "contactTitle", "city", "country"],
         { "companyName": "Company", "contactName": "Contact", "contactTitle": "Title", "city": "City", "country": "Country" }))
 
-    res.status(200).json(response);
+    res.status(200).json({
+        response: response,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
+
+
 })
 
 app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Response) => {
@@ -128,7 +135,7 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
             "Home Page": supplierObj.homePage
         };
     }
-    else{
+    else {
         response = partResponse;
     }
 
@@ -136,31 +143,30 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
 })
 
 app.get("/products", async (req: express.Request, res: express.Response) => {
-    let productsObj: typeof schemas.products.$inferSelect[];
+    let productsObj: typeof schemas.products.$inferSelect[], dbResponse;
     try {
-        productsObj = await northwindTradersModel.getAllProducts();
+        dbResponse = await northwindTradersModel.getAllProducts();
+        productsObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         console.log(error);
         return;
     }
 
-    const maxPageNumber = Math.ceil(productsObj.length / MAX_ITEMS_PER_PAGE);
-    const pageNumber: number = Number(req.query.page || 1);
-    // if (pageNumber > maxPageNumber || pageNumber < 0) {
-    //     res.status(200).send("No results");
-    //     return;
-    // }
-
-    const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
-    const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
-    // productsObj = productsObj.slice(minIdx, maxIdx + 1);
 
     const response = productsObj.map((productObj) => filterObject(productObj,
         ["productId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder"],
         { "productName": "Name", "quantityPerUnit": "Qt per unit", "unitPrice": "Price", "unitsInStock": "Stock", "unitsOnOrder": "Order" }))
 
-    res.status(200).json(response);
+    res.status(200).json({
+        response: response,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
+
+
 })
 
 app.get("/product/:product_id", async (req: express.Request, res: express.Response) => {
