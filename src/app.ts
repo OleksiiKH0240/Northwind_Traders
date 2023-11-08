@@ -294,26 +294,23 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
 })
 
 app.get("/customers", async (req: express.Request, res: express.Response) => {
-    let customersObj: typeof schemas.customers.$inferSelect[];
+    let customersObj, dbResponse;
     try {
-        customersObj = await northwindTradersModel.getAllCustomers();
+        dbResponse = await northwindTradersModel.getAllCustomers();
+        customersObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         console.log(error);
         return;
     }
 
-    const maxPageNumber = Math.ceil(customersObj.length / MAX_ITEMS_PER_PAGE);
-    const pageNumber: number = Number(req.query.page || 1);
-    // if (pageNumber > maxPageNumber || pageNumber < 0) {
-    //     res.status(200).send("No results");
-    //     return;
-    // }
-
-    const response = customersObj.map((customerObj) => filterObject(customerObj,
-        ["customerId", "companyName", "contactName", "contactTitle", "city", "country"],
-        { "companyName": "Company", "contactName": "Contact", "contactTitle": "Title", "city": "City", "country": "Country" }))
-    res.status(200).json(response);
+    res.status(200).json({
+        response: customersObj,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
 })
 
 app.get("/customer/:customer_id", async (req: express.Request, res: express.Response) => {
@@ -323,49 +320,50 @@ app.get("/customer/:customer_id", async (req: express.Request, res: express.Resp
         return;
     }
 
-    let customerObj: typeof schemas.customers.$inferSelect;
+    let customerObj, dbResponse;
     try {
-        customerObj = await northwindTradersModel.getCustomerById(customerId);
+        dbResponse = await northwindTradersModel.getCustomerById(customerId);
+        customerObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
-    const response = {
-        customerId: customerObj.customerId,
-        "Company Name": customerObj.companyName,
-        "Contact Name": customerObj.contactName,
-        "Contact Title": customerObj.contactTitle,
-        Address: customerObj.address,
-        City: customerObj.city,
-        "Postal Code": customerObj.postalCode,
-        Region: customerObj.region,
-        Country: customerObj.country,
-        Phone: customerObj.phone,
-        Fax: customerObj.fax
-    }
 
-    res.status(200).json(response);
+    res.status(200).json({
+        response: customerObj,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
 })
 
 app.get("/search", async (req: express.Request, res: express.Response) => {
     const tableName = String(req.query.tblName);
     const searchText = String(req.query.SearchText).toLowerCase();
 
-    let result;
+    let result, dbResponse;
     if (tableName == "Customers" && searchText != "undefined") {
-        result = await northwindTradersModel.getCustomersByCompanyName(searchText);
+        dbResponse = await northwindTradersModel.getCustomersByCompanyName(searchText);
+        result = dbResponse.result;
     }
     else if (tableName == "Products" && searchText != "undefined") {
-        result = await northwindTradersModel.getProductsByName(searchText);
+        dbResponse = await northwindTradersModel.getProductsByName(searchText);
+        result = dbResponse.result;
     }
     else {
-        res.sendStatus(200);
+        res.status(200).json({});
         return;
     }
 
-    res.status(200).json(result);
-
-    // res.status(200).send("not_ready_yet");
+    res.status(200).json({
+        response: result,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
 })
 
 

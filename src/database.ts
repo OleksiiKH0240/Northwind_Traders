@@ -123,7 +123,14 @@ class NorthwindTradersModel {
         }).from(schemas.employees);
         const end = Date.now();
 
-        const sqlQuery = `select employee_id as "employeeId", concat(first_name, ' ', last_name) as "Name", title as "Title", city as "City", country as "Country", home_phone as "Phone" from ${POSTGRES_DB}.employees;`;
+        const sqlQuery = `
+        select employee_id                 as "employeeId",
+        concat(first_name, ' ', last_name) as "Name",
+        title                              as "Title",
+        city                               as "City",
+        country                            as "Country",
+        home_phone                         as "Phone"
+        from ${POSTGRES_DB}.employees;`;
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
@@ -170,36 +177,128 @@ class NorthwindTradersModel {
             where(eq(schemas.employees.employeeId, employeeId));
         const end = Date.now();
 
-        const sqlQuery = `select employee_id as "employeeId", concat(first_name, ' ', last_name) as "Name", title as "Title", title_of_courtesy as "Title Of Courtesy", 
-        birth_date as "Birth Date", hire_date as "Hire Date", address as "Address", city as "City", postal_code as "Postal Code", country as "Country", 
-        home_phone as "Phone", extension as "Extension", notes as "Notes", concat(e.first_name, ' ', e.last_name) as "Reports To", employees.reports_to as "reportsTo"
+        const sqlQuery = `
+        select employee_id                     as "employeeId",
+        concat(first_name, ' ', last_name)     as "Name",
+        title                                  as "Title",
+        title_of_courtesy                      as "Title Of Courtesy",
+        birth_date                             as "Birth Date",
+        hire_date                              as "Hire Date",
+        address                                as "Address",
+        city                                   as "City",
+        postal_code                            as "Postal Code",
+        country                                as "Country",
+        home_phone                             as "Phone",
+        extension                              as "Extension",
+        notes                                  as "Notes",
+        concat(e.first_name, ' ', e.last_name) as "Reports To",
+        employees.reports_to                   as "reportsTo"
         from ${POSTGRES_DB}.employees
-          left join ${POSTGRES_DB}.employees e on e.employee_id = employees.reports_to from ${POSTGRES_DB}.employees where employee_id=${employeeId};`;
+          left join ${POSTGRES_DB}.employees e on e.employee_id = employees.reports_to from ${POSTGRES_DB}.employees
+        where employee_id=${employeeId};`;
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
-    async getAllCustomers(): Promise<Array<typeof schemas.customers.$inferSelect>> {
-        const result = await this.dbClient.select().from(schemas.customers);
-        return result;
+    async getAllCustomers(): Promise<{
+        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
+            customerId: string,
+            Company: string | null
+            Contact: string | null
+            Title: string | null
+            City: string | null
+            Country: string | null
+        }[]
+    }> {
+        const start = Date.now();
+        const result = await this.dbClient.select({
+            customerId: schemas.customers.customerId,
+            Company: schemas.customers.companyName,
+            Contact: schemas.customers.contactName,
+            Title: schemas.customers.contactTitle,
+            City: schemas.customers.city,
+            Country: schemas.customers.country
+        }).from(schemas.customers);
+        const end = Date.now();
+
+        const sqlQuery = `
+        select customer_id   as "customerId",
+        company_name  as "Company",
+        contact_name  as "Contact",
+        contact_title as "Title",
+        city          as "City",
+        country       as "Country"
+        from ${POSTGRES_DB}.customers;`;
+
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
-    async getCustomerById(customerId: string): Promise<typeof schemas.customers.$inferSelect> {
-        const result = await this.dbClient.select().from(schemas.customers).where(eq(schemas.customers.customerId, customerId));
-        return result[0];
+    async getCustomerById(customerId: string): Promise<{
+        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
+            customerId: string | null,
+            "Company Name": string | null,
+            "Contact Name": string | null,
+            "Contact Title": string | null,
+            Address: string | null,
+            City: string | null,
+            "Postal Code": string | null,
+            Region: string | null,
+            Country: string | null,
+            Phone: string | null,
+            Fax: string | null
+        }
+    }> {
+        const start = Date.now();
+        const result = await this.dbClient.select({
+            customerId: schemas.customers.customerId,
+            "Company Name": schemas.customers.companyName,
+            "Contact Name": schemas.customers.contactName,
+            "Contact Title": schemas.customers.contactTitle,
+            Address: schemas.customers.address,
+            City: schemas.customers.city,
+            "Postal Code": schemas.customers.postalCode,
+            Region: schemas.customers.region,
+            Country: schemas.customers.country,
+            Phone: schemas.customers.phone,
+            Fax: schemas.customers.fax
+        }).from(schemas.customers).where(eq(schemas.customers.customerId, customerId));
+        const end = Date.now();
+
+        const sqlQuery = `
+        select customer_id   as "customerId",
+        company_name  as "Company Name",
+        contact_name  as "Contact Name",
+        contact_title as "Contact Title",
+        address as "Address",
+        city          as "City",
+        postal_code as "Postal Code",
+        region as "Region",
+        country as "Country",
+        phone as "Phone",
+        fax as "Fax"
+        from ${POSTGRES_DB}.customers
+        where customer_id='${customerId}';`;
+
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
     async getCustomersByCompanyName(companyName: string): Promise<{
-        customerId: string,
-        companyName: string,
-        contactName: string,
-        contactTitle: string,
-        phone: string
-    }[]> {
-        const queryResult = await this.dbClient.execute(sql.raw(`
+        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
+            customerId: string,
+            companyName: string,
+            contactName: string,
+            contactTitle: string,
+            phone: string
+        }[]
+    }> {
+        const sqlQuery = `
         select customer_id, company_name, contact_name, contact_title, phone
         from ${POSTGRES_DB}.customers
-        where lower(company_name) like '%${companyName}%';`));
+        where lower(company_name) like '%${companyName}%';`;
+
+        const start = Date.now();
+        const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));
+        const end = Date.now();
 
         const result = queryResult.map((customerObj) => {
             return {
@@ -211,7 +310,7 @@ class NorthwindTradersModel {
             };
         })
 
-        return result;
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result };
     }
 
     async getAllSuppliers(): Promise<{
@@ -236,8 +335,14 @@ class NorthwindTradersModel {
         const end = Date.now();
 
         const sqlQuery = `
-        select supplier_id as supplierId, company_name as Company, contact_name as Contact, contact_title as Title, 
-        city as City, country as Country from ${POSTGRES_DB}.suppliers;`
+        select supplier_id   as supplierId,
+        company_name  as Company,
+        contact_name  as Contact,
+        contact_title as Title,
+        city          as City,
+        country       as Country
+        from ${POSTGRES_DB}.suppliers;`
+
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
@@ -273,9 +378,20 @@ class NorthwindTradersModel {
         const end = Date.now();
 
         const sqlQuery = `
-        select supplier_id as supplierId, company_name as "Company Name", contact_name as "Contact Name", 
-        contact_title as "Contact Title", city as City, country as Country, address as Address, region as Region, 
-        postal_code as "Postal Code", home_page as "Home Page", phone as Phone from ${POSTGRES_DB}.suppliers where supplier_id=${supplierId};`;
+        select supplier_id   as supplierId,
+        company_name  as "Company Name",
+        contact_name  as "Contact Name",
+        contact_title as "Contact Title",
+        city          as City,
+        country       as Country,
+        address       as Address,
+        region        as Region,
+        postal_code   as "Postal Code",
+        home_page     as "Home Page",
+        phone         as Phone
+        from ${POSTGRES_DB}.suppliers
+        where supplier_id = ${supplierId};`;
+
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
@@ -300,7 +416,15 @@ class NorthwindTradersModel {
         }).from(schemas.products);
         const end = Date.now();
 
-        const sqlQuery = `select product_id as productId, product_name as Name, quantity_per_unit as "Qt per unit", unit_price as Price, units_in_stock as Stock, units_on_order as Order from ${POSTGRES_DB}.products;`
+        const sqlQuery = `
+        select product_id        as productId,
+        product_name      as Name,
+        quantity_per_unit as "Qt per unit",
+        unit_price        as Price,
+        units_in_stock    as Stock,
+        units_on_order    as Order
+        from ${POSTGRES_DB}.products;`;
+
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
@@ -336,26 +460,41 @@ class NorthwindTradersModel {
         const end = Date.now();
 
         const sqlQuery = `
-        select product_id as productId, company_name as Supplier, product_name as "Product Name", 
-        products.supplierId, quantity_per_unit as "Quantity Per Unit", unit_price as "Unit Price", 
-        units_in_stock as "Stock", units_on_order as "Units In Order", reorder_level as "Reorder Level", discontinued as Discontinued from ${POSTGRES_DB}.products 
-        inner join ${POSTGRES_DB}.suppliers s on s.supplier_id = products.supplier_id
-        where product_id = ${productId};`
+        select product_id        as productId,
+        company_name      as Supplier,
+        product_name      as "Product Name",
+        products.supplierId,
+        quantity_per_unit as "Quantity Per Unit",
+        unit_price        as "Unit Price",
+        units_in_stock    as "Stock",
+        units_on_order    as "Units In Order",
+        reorder_level     as "Reorder Level",
+        discontinued      as Discontinued
+        from ${POSTGRES_DB}.products
+          inner join ${POSTGRES_DB}.suppliers s on s.supplier_id = products.supplier_id
+        where product_id = ${productId};`;
+
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
     async getProductsByName(productName: string): Promise<{
-        productId: number,
-        productName: string,
-        quantityPerUnit: string,
-        unitPrice: number,
-        unitsInStock: number
-    }[]> {
-        const queryResult = await this.dbClient.execute(sql.raw(`
+        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
+            productId: number,
+            productName: string,
+            quantityPerUnit: string,
+            unitPrice: number,
+            unitsInStock: number
+        }[]
+    }> {
+        const sqlQuery = `
         select product_id, product_name, quantity_per_unit, unit_price, units_in_stock
         from ${POSTGRES_DB}.products
-        where lower(product_name) like '%${productName}%';`));
-        console.log(queryResult);
+        where lower(product_name) like '%${productName}%';`;
+
+        const start = Date.now();
+        const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));
+        const end = Date.now();
+
         const result = queryResult.map((productObj) => {
             return {
                 productId: Number(productObj.product_id),
@@ -366,7 +505,7 @@ class NorthwindTradersModel {
             };
         })
 
-        return result;
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result };
     }
 
     async getAllOrders(): Promise<{
@@ -383,21 +522,21 @@ class NorthwindTradersModel {
     }> {
         const sqlQuery = `
         select orders.order_id,
-            total_price,
-            products,
-            quantity,
-            shipped_date,
-            ship_name,
-            ship_city,
-            ship_country
+        total_price,
+        products,
+        quantity,
+        shipped_date,
+        ship_name,
+        ship_city,
+        ship_country
         from (select order_id,
-            sum(order_details.unit_price * order_details.quantity) AS total_price,
-            count(order_details.order_id)                                            AS products,
-            sum(order_details.quantity)                                              AS quantity
+             sum(order_details.unit_price * order_details.quantity) AS total_price,
+             count(order_details.order_id)                          AS products,
+             sum(order_details.quantity)                            AS quantity
 
-            from ${POSTGRES_DB}.order_details
-            group by ${POSTGRES_DB}.order_details.order_id) orders_numbers
-        left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id;`;
+             from ${POSTGRES_DB}.order_details
+             group by ${POSTGRES_DB}.order_details.order_id) orders_numbers
+         left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id;`;
 
         const start = Date.now();
         const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));
@@ -446,14 +585,13 @@ class NorthwindTradersModel {
             }[]
         } | {}
     }> {
-        const sqlQuery = `
-        select orders.order_id,
+        const sqlQuery = `select orders.order_id,
         total_price,
         total_products,
         total_quantity,
         total_discount,
         orders.customer_id,
-        s.company_name as ship_via_name,
+        s.company_name                                                         as ship_via_name,
         freight,
         order_date,
         shipped_date,
@@ -466,25 +604,25 @@ class NorthwindTradersModel {
         p.product_id,
         product_name,
         quantity,
-        od.unit_price               as order_price,
-        od.unit_price * od.quantity as price,
+        od.unit_price                                                          as order_price,
+        od.unit_price * od.quantity                                            as price,
         od.discount
-
+ 
         from (select order_id,
-              sum(order_details.unit_price * order_details.quantity) AS total_price,
-              sum(order_details.unit_price * order_details.quantity *
-                 order_details.discount)                            AS total_discount,
-              count(order_details.order_id)                          AS total_products,
-              sum(order_details.quantity)                            AS total_quantity
-
+                     sum(order_details.unit_price * order_details.quantity) AS total_price,
+                     sum(order_details.unit_price * order_details.quantity *
+                         order_details.discount)                            AS total_discount,
+                     count(order_details.order_id)                          AS total_products,
+                     sum(order_details.quantity)                            AS total_quantity
+                    
               from ${POSTGRES_DB}.order_details
               group by ${POSTGRES_DB}.order_details.order_id) orders_numbers
-         left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id
-         left join ${POSTGRES_DB}.order_details od on orders.order_id = od.order_id
-         left join ${POSTGRES_DB}.products p on p.product_id = od.product_id
-         left join ${POSTGRES_DB}.customers c on c.customer_id = orders.customer_id
-         left join ${POSTGRES_DB}.shippers s on s.shipper_id = orders.ship_via
-        where orders.order_id = ${orderId};`
+                 left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id
+                 left join ${POSTGRES_DB}.order_details od on orders.order_id = od.order_id
+                 left join ${POSTGRES_DB}.products p on p.product_id = od.product_id
+                 left join ${POSTGRES_DB}.customers c on c.customer_id = orders.customer_id
+                 left join ${POSTGRES_DB}.shippers s on s.shipper_id = orders.ship_via
+        where orders.order_id = ${orderId};`;
 
         const start = Date.now();
         const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));

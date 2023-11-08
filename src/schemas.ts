@@ -13,13 +13,13 @@ if (POSTGRES_DB === undefined) {
 
 export const mySchema = pgSchema(POSTGRES_DB);
 
-export const sqlMetrics = mySchema.table('sql_metrics', {
-    queryCount: numeric('query_count'),
-    resultsCount: numeric('results_count'),
-    select: text('select'),
-    selectWhere: text('select_where'),
-    selectWhereJoin: text('select_where_join')
-})
+// export const sqlMetrics = mySchema.table('sql_metrics', {
+//     queryCount: numeric('query_count'),
+//     resultsCount: numeric('results_count'),
+//     select: text('select'),
+//     selectWhere: text('select_where'),
+//     selectWhereJoin: text('select_where_join')
+// })
 
 // export const ActivityLog = mySchema.table('activity_log', {
 //     logId: serial('log_id').primaryKey(),
