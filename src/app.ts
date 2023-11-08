@@ -133,8 +133,9 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
         response = rest;
     }
 
+    // res.status(200).send();
     res.status(200).json({
-        response: res,
+        response: response,
         dt: dbResponse.dt,
         sqlQuery: dbResponse.sqlQuery,
         productVersion: dbResponse.PRODUCT_VERSION,

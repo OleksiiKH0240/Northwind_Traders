@@ -376,7 +376,7 @@ class NorthwindTradersModel {
             Discount: number
         }[]
     } | null> {
-        const queryResult = await this.dbClient.execute(sql.raw(`
+        const sqlQuery = `
         select orders.order_id,
         total_price,
         total_products,
@@ -414,7 +414,11 @@ class NorthwindTradersModel {
          left join ${POSTGRES_DB}.products p on p.product_id = od.product_id
          left join ${POSTGRES_DB}.customers c on c.customer_id = orders.customer_id
          left join ${POSTGRES_DB}.shippers s on s.shipper_id = orders.ship_via
-        where orders.order_id = ${orderId};`));
+        where orders.order_id = ${orderId};`
+
+        const start = Date.now();
+        const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));
+        const end = Date.now();
 
         if (queryResult.length == 0) return null;
 
