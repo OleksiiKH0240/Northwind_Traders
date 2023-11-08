@@ -120,6 +120,7 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
         supplierObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 
@@ -171,13 +172,14 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
         res.status(400).send("wrong format of productId");
         return;
     }
-    
+
     let productObj, dbResponse;
     try {
         dbResponse = await northwindTradersModel.getProductById(productId);
         productObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 
@@ -237,33 +239,23 @@ app.get("/order/:order_id", async (req: express.Request, res: express.Response) 
 })
 
 app.get("/employees", async (req: express.Request, res: express.Response) => {
-    let employeesObj: typeof schemas.employees.$inferSelect[];
+    let employeesObj, dbResponse;
     try {
-        employeesObj = await northwindTradersModel.getAllEmployees();
+        dbResponse = await northwindTradersModel.getAllEmployees();
+        employeesObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         console.log(error);
         return;
     }
 
-    const maxPageNumber = Math.ceil(employeesObj.length / MAX_ITEMS_PER_PAGE);
-    const pageNumber: number = Number(req.query.page || 1);
-    // if (pageNumber > maxPageNumber || pageNumber < 0) {
-    //     res.status(200).send("No results");
-    //     return;
-    // }
-
-    const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
-    const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
-    // employeesObj = employeesObj.slice(minIdx, maxIdx + 1);
-
-    const response = employeesObj.map((employeeObj) => {
-        return {
-            employeeId: employeeObj.employeeId, Name: employeeObj.firstName + " " + employeeObj.lastName,
-            Title: employeeObj.title, City: employeeObj.city, Country: employeeObj.country, Phone: employeeObj.homePhone
-        }
+    res.status(200).json({
+        response: employeesObj,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
     });
-    res.status(200).json(response);
 })
 
 app.get("/employee/:employee_id", async (req: express.Request, res: express.Response) => {
@@ -273,51 +265,32 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
         return;
     }
 
-    let employeeObj: typeof schemas.employees.$inferSelect;
+    let employeeObj, dbResponse;
     try {
-        employeeObj = await northwindTradersModel.getEmployeeById(employeeId);
+        dbResponse = await northwindTradersModel.getEmployeeById(employeeId);
+        employeeObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
+        console.log(error);
         return;
     }
 
-    let reportsToEmployeeName: string | null;
-    if (employeeObj.reportsTo === null) reportsToEmployeeName = null;
-    else {
-        const reportsToEmployee = await northwindTradersModel.getEmployeeById(employeeObj.reportsTo);
-        reportsToEmployeeName = reportsToEmployee.firstName + " " + reportsToEmployee.lastName;
-    }
-
-    const partResponse = {
-        employeeId: employeeObj.employeeId,
-        Name: employeeObj.firstName + " " + employeeObj.lastName,
-        Title: employeeObj.title,
-        "Title Of Courtesy": employeeObj.titleOfCourtesy,
-        "Birth Date": employeeObj.birthDate,
-        "Hire Date": employeeObj.hireDate,
-        Address: employeeObj.address,
-        City: employeeObj.city,
-        "Postal Code": employeeObj.postalCode,
-        "Country": employeeObj.country,
-        "Home Phone": employeeObj.homePhone,
-        Extension: employeeObj.extension,
-        Notes: employeeObj.notes
-    };
-
     let response;
     if (employeeObj.reportsTo) {
-        response = {
-            ...partResponse,
-            "Reports To": reportsToEmployeeName,
-            reportsId: employeeObj.reportsTo
-        }
+        response = employeeObj;
     }
     else {
-        response = partResponse;
+        const { "Reports To": unUsed1, "reportsTo": unUsed2, ...rest } = employeeObj;
+        response = rest;
     }
 
-    // console.log(response);
-    res.status(200).json(response);
+    res.status(200).json({
+        response: response,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
 })
 
 app.get("/customers", async (req: express.Request, res: express.Response) => {

@@ -1,10 +1,11 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { sql, eq, like } from 'drizzle-orm';
+import { sql, eq, aliasedTable } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js/driver';
 import * as schemas from './schemas';
 import postgres from 'postgres';
 import donenv from 'dotenv';
+
 
 
 donenv.config();
@@ -101,14 +102,81 @@ class NorthwindTradersModel {
         }
     }
 
-    async getAllEmployees(): Promise<Array<typeof schemas.employees.$inferSelect>> {
-        const result = await this.dbClient.select().from(schemas.employees);
-        return result;
+    async getAllEmployees(): Promise<{
+        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
+            employeeId: number,
+            Name: string | null,
+            Title: string | null,
+            City: string | null,
+            Country: string | null,
+            Phone: string | null
+        }[]
+    }> {
+        const start = Date.now();
+        const result = await this.dbClient.select({
+            employeeId: schemas.employees.employeeId,
+            Name: sql<string>`concat(${schemas.employees.firstName}, ' ', ${schemas.employees.lastName})`,
+            Title: schemas.employees.title,
+            City: schemas.employees.city,
+            Country: schemas.employees.country,
+            Phone: schemas.employees.homePhone
+        }).from(schemas.employees);
+        const end = Date.now();
+
+        const sqlQuery = `select employee_id as "employeeId", concat(first_name, ' ', last_name) as "Name", title as "Title", city as "City", country as "Country", home_phone as "Phone" from ${POSTGRES_DB}.employees;`;
+
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
-    async getEmployeeById(employeeId: number): Promise<typeof schemas.employees.$inferSelect> {
-        const result = await this.dbClient.select().from(schemas.employees).where(eq(schemas.employees.employeeId, employeeId));
-        return result[0];
+    async getEmployeeById(employeeId: number): Promise<{
+        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
+            employeeId: number,
+            Name: string,
+            Title: string | null,
+            "Title Of Courtesy": string | null,
+            "Birth Date": string | null,
+            "Hire Date": string | null,
+            Address: string | null,
+            City: string | null,
+            "Postal Code": string | null,
+            "Country": string | null,
+            "Home Phone": string | null,
+            Extension: number | null,
+            Notes: string | null,
+            "Reports To": string | null,
+            reportsTo: string | null
+        }
+    }> {
+        const start = Date.now();
+        const e = aliasedTable(schemas.employees, "e");
+        const result = await this.dbClient.select({
+            employeeId: schemas.employees.employeeId,
+            Name: sql<string>`concat(${schemas.employees.firstName}, ' ', ${schemas.employees.lastName})`,
+            Title: schemas.employees.title,
+            "Title Of Courtesy": schemas.employees.titleOfCourtesy,
+            "Birth Date": schemas.employees.birthDate,
+            "Hire Date": schemas.employees.hireDate,
+            Address: schemas.employees.address,
+            City: schemas.employees.city,
+            "Postal Code": schemas.employees.postalCode,
+            "Country": schemas.employees.country,
+            "Home Phone": schemas.employees.homePhone,
+            Extension: schemas.employees.extension,
+            Notes: schemas.employees.notes,
+            "Reports To": sql<string>`concat(${e.firstName}, ' ', ${e.lastName})`,
+            "reportsTo": schemas.employees.reportsTo
+        }).from(schemas.employees).
+            leftJoin(e, eq(schemas.employees.reportsTo, e.employeeId)).
+            where(eq(schemas.employees.employeeId, employeeId));
+        const end = Date.now();
+
+        const sqlQuery = `select employee_id as "employeeId", concat(first_name, ' ', last_name) as "Name", title as "Title", title_of_courtesy as "Title Of Courtesy", 
+        birth_date as "Birth Date", hire_date as "Hire Date", address as "Address", city as "City", postal_code as "Postal Code", country as "Country", 
+        home_phone as "Phone", extension as "Extension", notes as "Notes", concat(e.first_name, ' ', e.last_name) as "Reports To", employees.reports_to as "reportsTo"
+        from ${POSTGRES_DB}.employees
+          left join ${POSTGRES_DB}.employees e on e.employee_id = employees.reports_to from ${POSTGRES_DB}.employees where employee_id=${employeeId};`;
+
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
     async getAllCustomers(): Promise<Array<typeof schemas.customers.$inferSelect>> {
