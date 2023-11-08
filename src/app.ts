@@ -51,38 +51,6 @@ app.get("/", async (req: express.Request, res: express.Response) => {
     res.status(200).send("healthy");
 })
 
-app.get("/dash", (req: express.Request, res: express.Response) => {
-    const WorkerObj = {
-        Colo: "KBP",
-        Country: "UA"
-    };
-
-    const SQL_MetricsObj = {
-        Query_count: 1,
-        Results_count: 1,
-        "SELECT": 0,
-        "SELECT_WHERE": 0,
-        "SELECT_LEFT_JOIN": 0
-    };
-
-    const Activity_LogObj = [
-        {
-            timestamp: "2023-10-30T13:18:55.885Z",
-            version: "v0-dev",
-            time_required: 0.2589,
-            query: "SELECT COUNT(1) as total FROM Employee"
-        }
-    ];
-
-    const response = {
-        Worker: WorkerObj,
-        SQL_Metrics: SQL_MetricsObj,
-        Activity_Log: Activity_LogObj
-    }
-
-    res.status(200).json(response);
-})
-
 const MAX_ITEMS_PER_PAGE = 20;
 
 app.get("/suppliers", async (req: express.Request, res: express.Response) => {
