@@ -207,7 +207,7 @@ class NorthwindTradersModel {
         const sqlQuery = `
         select supplier_id as supplierId, company_name as "Company Name", contact_name as "Contact Name", 
         contact_title as "Contact Title", city as City, country as Country, address as Address, region as Region, 
-        postal_code as "Postal Code", home_page as "Home Page", phone as Phone from ${POSTGRES_DB}.suppliers;`;
+        postal_code as "Postal Code", home_page as "Home Page", phone as Phone from ${POSTGRES_DB}.suppliers where supplier_id=${supplierId};`;
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
@@ -352,30 +352,32 @@ class NorthwindTradersModel {
     }
 
     async getOrderById(orderId: number): Promise<{
-        "Total Price": number,
-        "Total Products": number,
-        "Total Quantity": number,
-        "Total Discount": number,
-        "Customer Id": string,
-        "Shipped Date": string,
-        "Ship Via": string,
-        "Freight": string,
-        "Required Date": string,
-        "Order Date": string,
-        "Ship Name": string,
-        "Ship City": string,
-        "Ship Region": string,
-        "Ship Postal Code": string,
-        "Ship Country": string,
-        ProductsInOrder: {
-            productId: number,
-            Product: string,
-            Quantity: number,
-            "Order Price": number,
+        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
             "Total Price": number,
-            Discount: number
-        }[]
-    } | null> {
+            "Total Products": number,
+            "Total Quantity": number,
+            "Total Discount": number,
+            "Customer Id": string,
+            "Shipped Date": string,
+            "Ship Via": string,
+            "Freight": string,
+            "Required Date": string,
+            "Order Date": string,
+            "Ship Name": string,
+            "Ship City": string,
+            "Ship Region": string,
+            "Ship Postal Code": string,
+            "Ship Country": string,
+            ProductsInOrder: {
+                productId: number,
+                Product: string,
+                Quantity: number,
+                "Order Price": number,
+                "Total Price": number,
+                Discount: number
+            }[]
+        } | {}
+    }> {
         const sqlQuery = `
         select orders.order_id,
         total_price,
@@ -420,7 +422,7 @@ class NorthwindTradersModel {
         const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));
         const end = Date.now();
 
-        if (queryResult.length == 0) return null;
+        if (queryResult.length == 0) return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: {} };
 
         const orderObj = queryResult[0];
         const orderResult = {
@@ -453,7 +455,7 @@ class NorthwindTradersModel {
         });
 
         const result = { ...orderResult, ProductsInOrder: productsInOrder };
-        return result;
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 }
 

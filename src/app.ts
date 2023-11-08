@@ -217,16 +217,23 @@ app.get("/order/:order_id", async (req: express.Request, res: express.Response) 
         return;
     }
 
+    let orderObj, dbResponse;
     try {
-        const orderObj = await northwindTradersModel.getOrderById(orderId);
-        res.status(200).json(orderObj);
+        dbResponse = await northwindTradersModel.getOrderById(orderId);
+        orderObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         console.log(error);
         return;
     }
 
-
+    res.status(200).json({
+        response: orderObj,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
 })
 
 app.get("/employees", async (req: express.Request, res: express.Response) => {
