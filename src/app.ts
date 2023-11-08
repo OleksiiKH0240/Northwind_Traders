@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { northwindTradersModel } from './database';
 import * as schemas from 'schemas';
+import geoip from 'geoip-country';
+import dns from 'dns';
 
 
 const app = express();
@@ -19,6 +21,9 @@ app.use(cors());
 
 
 dotenv.config();
+
+const POSTRGRES_REGION = "Europe (Frankfurt)";
+
 
 const PORT = Number(process.env.PORT) || 80;
 
@@ -91,12 +96,8 @@ app.get("/suppliers", async (req: express.Request, res: express.Response) => {
         return;
     }
 
-    const response = suppliersObj.map((supplierObj) => filterObject(supplierObj,
-        ["supplierId", "companyName", "contactName", "contactTitle", "city", "country"],
-        { "companyName": "Company", "contactName": "Contact", "contactTitle": "Title", "city": "City", "country": "Country" }))
-
     res.status(200).json({
-        response: response,
+        response: suppliersObj,
         dt: dbResponse.dt,
         sqlQuery: dbResponse.sqlQuery,
         productVersion: dbResponse.PRODUCT_VERSION,
@@ -113,37 +114,36 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
         return;
     }
 
-    let supplierObj;
+    let dbResponse, supplierObj;
     try {
-        supplierObj = await northwindTradersModel.getSupplierById(supplierId);
+        dbResponse = await northwindTradersModel.getSupplierById(supplierId);
+        supplierObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         return;
     }
 
-    const partResponse = filterObject(supplierObj,
-        ["supplierId", "companyName", "contactName", "contactTitle", "address", "city", "region", "postalCode", "country", "phone"],
-        {
-            "companyName": "Company Name", "contactName": "Contact Name", "contactTitle": "Contact Title",
-            "city": "City", "country": "Country", "address": "Address", "region": "Region", "postalCode": "Postal Code", "phone": "Phone"
-        });
 
     let response;
-    if (supplierObj.homePage) {
-        response = {
-            ...partResponse,
-            "Home Page": supplierObj.homePage
-        };
+    if (supplierObj["Home Page"]) {
+        response = supplierObj;
     }
     else {
-        response = partResponse;
+        const { "Home Page": unused, ...rest } = supplierObj;
+        response = rest;
     }
 
-    res.status(200).json(response);
+    res.status(200).json({
+        response: response,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
 })
 
 app.get("/products", async (req: express.Request, res: express.Response) => {
-    let productsObj: typeof schemas.products.$inferSelect[], dbResponse;
+    let productsObj, dbResponse;
     try {
         dbResponse = await northwindTradersModel.getAllProducts();
         productsObj = dbResponse.result;
@@ -153,13 +153,8 @@ app.get("/products", async (req: express.Request, res: express.Response) => {
         return;
     }
 
-
-    const response = productsObj.map((productObj) => filterObject(productObj,
-        ["productId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder"],
-        { "productName": "Name", "quantityPerUnit": "Qt per unit", "unitPrice": "Price", "unitsInStock": "Stock", "unitsOnOrder": "Order" }))
-
     res.status(200).json({
-        response: response,
+        response: productsObj,
         dt: dbResponse.dt,
         sqlQuery: dbResponse.sqlQuery,
         productVersion: dbResponse.PRODUCT_VERSION,
@@ -175,43 +170,23 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
         res.status(400).send("wrong format of productId");
         return;
     }
-
-    let productObj: typeof schemas.products.$inferSelect;
+    
+    let productObj, dbResponse;
     try {
-        productObj = await northwindTradersModel.getProductById(productId);
+        dbResponse = await northwindTradersModel.getProductById(productId);
+        productObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         return;
     }
 
-    let supplierName: string | null;
-    if (productObj.supplierId === null) supplierName = null;
-    else {
-        const supplierObj = await northwindTradersModel.getSupplierById(productObj.supplierId);
-        supplierName = supplierObj.companyName;
-    }
-
-
-    let response = filterObject(productObj,
-        ["productId", "supplierId", "productName", "quantityPerUnit", "unitPrice", "unitsInStock", "unitsOnOrder", "reorderLevel", "discontinued"],
-        {
-            "productName": "Product Name", "quantityPerUnit": "Quantity Per Unit", "unitPrice": "Unit Price", "unitsInStock": "Units In Stock",
-            "unitsOnOrder": "Units In Order", "reorderLevel": "Reorder Level", "discontinued": "Discontinued"
-        });
-    response = {
-        productId: productObj.productId,
-        "Supplier": supplierName,
-        "Product Name": productObj.productName,
-        supplierId: productObj.supplierId,
-        "Quantity Per Unit": productObj.quantityPerUnit,
-        "Unit Price": productObj.unitPrice,
-        "Units In Stock": productObj.unitsInStock,
-        "Units In Order": productObj.unitsOnOrder,
-        "Reorder Level": productObj.reorderLevel,
-        "Discontinued": productObj.discontinued
-    };
-
-    res.status(200).json(response);
+    res.status(200).json({
+        response: productObj,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
 })
 
 app.get("/orders", async (req: express.Request, res: express.Response) => {
