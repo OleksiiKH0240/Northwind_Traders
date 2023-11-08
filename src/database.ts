@@ -263,14 +263,16 @@ class NorthwindTradersModel {
             "Reorder Level": schemas.products.reorderLevel,
             Discontinued: schemas.products.discontinued
         }).from(schemas.products).
-        innerJoin(schemas.suppliers, eq(schemas.products.supplierId, schemas.suppliers.supplierId)).
-        where(eq(schemas.products.productId, productId));
+            innerJoin(schemas.suppliers, eq(schemas.products.supplierId, schemas.suppliers.supplierId)).
+            where(eq(schemas.products.productId, productId));
         const end = Date.now();
-        
+
         const sqlQuery = `
         select product_id as productId, company_name as Supplier, product_name as "Product Name", 
         products.supplierId, quantity_per_unit as "Quantity Per Unit", unit_price as "Unit Price", 
-        units_in_stock as "Stock", units_on_order as "Units In Order", reorder_level as "Reorder Level", discontinued as Discontinued from ${POSTGRES_DB}.products;`
+        units_in_stock as "Stock", units_on_order as "Units In Order", reorder_level as "Reorder Level", discontinued as Discontinued from ${POSTGRES_DB}.products 
+        inner join ${POSTGRES_DB}.suppliers s on s.supplier_id = products.supplier_id
+        where product_id = ${productId};`
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
@@ -300,16 +302,18 @@ class NorthwindTradersModel {
     }
 
     async getAllOrders(): Promise<{
-        Id: number,
-        "Total Price": number,
-        Products: number,
-        Quantity: number,
-        Shipped: string,
-        "Ship Name": string,
-        City: string,
-        Country: string
-    }[]> {
-        const queryResult = await this.dbClient.execute(sql.raw(`
+        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
+            Id: number,
+            "Total Price": number,
+            Products: number,
+            Quantity: number,
+            Shipped: string,
+            "Ship Name": string,
+            City: string,
+            Country: string
+        }[]
+    }> {
+        const sqlQuery = `
         select orders.order_id,
             total_price,
             products,
@@ -325,8 +329,12 @@ class NorthwindTradersModel {
 
             from ${POSTGRES_DB}.order_details
             group by ${POSTGRES_DB}.order_details.order_id) orders_numbers
-        left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id;`))
-        // console.log(queryResult);
+        left join ${POSTGRES_DB}.orders on orders_numbers.order_id = orders.order_id;`;
+
+        const start = Date.now();
+        const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));
+        const end = Date.now();
+
         const result = queryResult.map((orderObj) => {
             return {
                 Id: Number(orderObj.order_id),
@@ -340,7 +348,7 @@ class NorthwindTradersModel {
             }
         })
 
-        return result;
+        return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
     async getOrderById(orderId: number): Promise<{

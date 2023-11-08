@@ -134,7 +134,7 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
     }
 
     res.status(200).json({
-        response: response,
+        response: res,
         dt: dbResponse.dt,
         sqlQuery: dbResponse.sqlQuery,
         productVersion: dbResponse.PRODUCT_VERSION,
@@ -190,28 +190,23 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
 })
 
 app.get("/orders", async (req: express.Request, res: express.Response) => {
-    let ordersObj;
+    let ordersObj, dbResponse;
     try {
-        ordersObj = await northwindTradersModel.getAllOrders();
+        dbResponse = await northwindTradersModel.getAllOrders();
+        ordersObj = dbResponse.result;
     } catch (error) {
         res.status(500).send("something went wrong on the server side.");
         console.log(error);
         return;
     }
 
-    const maxPageNumber = Math.ceil(ordersObj.length / MAX_ITEMS_PER_PAGE);
-    const pageNumber: number = Number(req.query.page || 1);
-    // if (pageNumber > maxPageNumber || pageNumber < 0) {
-    //     res.status(200).send("No results");
-    //     return;
-    // }
-
-    const minIdx = (pageNumber - 1) * MAX_ITEMS_PER_PAGE;
-    const maxIdx = pageNumber * MAX_ITEMS_PER_PAGE - 1;
-    // ordersObj = ordersObj.slice(minIdx, maxIdx + 1);
-
-
-    res.status(200).json(ordersObj);
+    res.status(200).json({
+        response: ordersObj,
+        dt: dbResponse.dt,
+        sqlQuery: dbResponse.sqlQuery,
+        productVersion: dbResponse.PRODUCT_VERSION,
+        queryTime: dbResponse.queryTime
+    });
 })
 
 app.get("/order/:order_id", async (req: express.Request, res: express.Response) => {
