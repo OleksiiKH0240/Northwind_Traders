@@ -2,9 +2,14 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { sql, eq, aliasedTable } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js/driver';
-import * as schemas from './schemas';
 import postgres from 'postgres';
 import donenv from 'dotenv';
+import * as schemas from './schemas';
+import {
+    EmployeesReturnType, EmployeeReturnType, CustomersReturnType, CustomerReturnType, CustomersSearchReturnType,
+    SuppliersReturnType, SupplierReturnType, ProductsReturnType, ProductReturnType, ProductsSearchReturnType,
+    OrdersReturnType, OrderReturnType, ModelTemplateReturnType
+} from './modelReturnTypes'
 
 
 
@@ -102,16 +107,7 @@ class NorthwindTradersModel {
         }
     }
 
-    async getAllEmployees(): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            employeeId: number,
-            Name: string | null,
-            Title: string | null,
-            City: string | null,
-            Country: string | null,
-            Phone: string | null
-        }[]
-    }> {
+    async getAllEmployees(): Promise<ModelTemplateReturnType<EmployeesReturnType>> {
         const start = Date.now();
         const result = await this.dbClient.select({
             employeeId: schemas.employees.employeeId,
@@ -135,25 +131,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
-    async getEmployeeById(employeeId: number): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            employeeId: number,
-            Name: string,
-            Title: string | null,
-            "Title Of Courtesy": string | null,
-            "Birth Date": string | null,
-            "Hire Date": string | null,
-            Address: string | null,
-            City: string | null,
-            "Postal Code": string | null,
-            "Country": string | null,
-            "Home Phone": string | null,
-            Extension: number | null,
-            Notes: string | null,
-            "Reports To": string | null,
-            reportsTo: string | null
-        }
-    }> {
+    async getEmployeeById(employeeId: number): Promise<ModelTemplateReturnType<EmployeeReturnType>> {
         const start = Date.now();
         const e = aliasedTable(schemas.employees, "e");
         const result = await this.dbClient.select({
@@ -200,16 +178,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
-    async getAllCustomers(): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            customerId: string,
-            Company: string | null
-            Contact: string | null
-            Title: string | null
-            City: string | null
-            Country: string | null
-        }[]
-    }> {
+    async getAllCustomers(): Promise<ModelTemplateReturnType<CustomersReturnType>> {
         const start = Date.now();
         const result = await this.dbClient.select({
             customerId: schemas.customers.customerId,
@@ -233,21 +202,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
-    async getCustomerById(customerId: string): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            customerId: string | null,
-            "Company Name": string | null,
-            "Contact Name": string | null,
-            "Contact Title": string | null,
-            Address: string | null,
-            City: string | null,
-            "Postal Code": string | null,
-            Region: string | null,
-            Country: string | null,
-            Phone: string | null,
-            Fax: string | null
-        }
-    }> {
+    async getCustomerById(customerId: string): Promise<ModelTemplateReturnType<CustomerReturnType>> {
         const start = Date.now();
         const result = await this.dbClient.select({
             customerId: schemas.customers.customerId,
@@ -282,15 +237,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
-    async getCustomersByCompanyName(companyName: string): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            customerId: string,
-            companyName: string,
-            contactName: string,
-            contactTitle: string,
-            phone: string
-        }[]
-    }> {
+    async getCustomersByCompanyName(companyName: string): Promise<ModelTemplateReturnType<CustomersSearchReturnType>> {
         const sqlQuery = `
         select customer_id, company_name, contact_name, contact_title, phone
         from ${POSTGRES_DB}.customers
@@ -313,16 +260,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result };
     }
 
-    async getAllSuppliers(): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            supplierId: number,
-            Company: string | null,
-            Contact: string | null,
-            Title: string | null,
-            City: string | null,
-            Country: string | null
-        }[]
-    }> {
+    async getAllSuppliers(): Promise<ModelTemplateReturnType<SuppliersReturnType>> {
         const start = Date.now();
         const result = await this.dbClient.select({
             supplierId: schemas.suppliers.supplierId,
@@ -346,21 +284,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
-    async getSupplierById(supplierId: number): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            supplierId: number,
-            "Company Name": string | null,
-            "Contact Name": string | null,
-            "Contact Title": string | null,
-            Address: string | null,
-            City: string | null,
-            Region: string | null,
-            "Postal Code": string | null,
-            Country: string | null,
-            Phone: string | null,
-            "Home Page": string | null
-        }
-    }> {
+    async getSupplierById(supplierId: number): Promise<ModelTemplateReturnType<SupplierReturnType>> {
         const start = Date.now();
         const result = await this.dbClient.select({
             supplierId: schemas.suppliers.supplierId,
@@ -395,16 +319,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
-    async getAllProducts(): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            productId: number,
-            Name: string | null,
-            "Qt per unit": string | null,
-            Price: string | null,
-            Stock: number | null,
-            Order: number | null
-        }[]
-    }> {
+    async getAllProducts(): Promise<ModelTemplateReturnType<ProductsReturnType>> {
         const start = Date.now();
         const result = await this.dbClient.select({
             productId: schemas.products.productId,
@@ -428,20 +343,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
-    async getProductById(productId: number): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            productId: number,
-            "Supplier": string | null,
-            "Product Name": string | null,
-            supplierId: number | null,
-            "Quantity Per Unit": string | null,
-            "Unit Price": string | null,
-            "Units In Stock": number | null,
-            "Units In Order": number | null,
-            "Reorder Level": number | null,
-            Discontinued: number | null
-        }
-    }> {
+    async getProductById(productId: number): Promise<ModelTemplateReturnType<ProductReturnType>> {
         const start = Date.now();
         const result = await this.dbClient.select({
             productId: schemas.products.productId,
@@ -477,15 +379,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
-    async getProductsByName(productName: string): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            productId: number,
-            productName: string,
-            quantityPerUnit: string,
-            unitPrice: number,
-            unitsInStock: number
-        }[]
-    }> {
+    async getProductsByName(productName: string): Promise<ModelTemplateReturnType<ProductsSearchReturnType>> {
         const sqlQuery = `
         select product_id, product_name, quantity_per_unit, unit_price, units_in_stock
         from ${POSTGRES_DB}.products
@@ -508,18 +402,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result };
     }
 
-    async getAllOrders(): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            Id: number,
-            "Total Price": number,
-            Products: number,
-            Quantity: number,
-            Shipped: string,
-            "Ship Name": string,
-            City: string,
-            Country: string
-        }[]
-    }> {
+    async getAllOrders(): Promise<ModelTemplateReturnType<OrdersReturnType>> {
         const sqlQuery = `
         select orders.order_id,
         total_price,
@@ -558,33 +441,7 @@ class NorthwindTradersModel {
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
-    async getOrderById(orderId: number): Promise<{
-        dt: Date, "PRODUCT_VERSION": string, queryTime: number, sqlQuery: string, result: {
-            "Total Price": number,
-            "Total Products": number,
-            "Total Quantity": number,
-            "Total Discount": number,
-            "Customer Id": string,
-            "Shipped Date": string,
-            "Ship Via": string,
-            "Freight": string,
-            "Required Date": string,
-            "Order Date": string,
-            "Ship Name": string,
-            "Ship City": string,
-            "Ship Region": string,
-            "Ship Postal Code": string,
-            "Ship Country": string,
-            ProductsInOrder: {
-                productId: number,
-                Product: string,
-                Quantity: number,
-                "Order Price": number,
-                "Total Price": number,
-                Discount: number
-            }[]
-        } | {}
-    }> {
+    async getOrderById(orderId: number): Promise<ModelTemplateReturnType<OrderReturnType>> {
         const sqlQuery = `select orders.order_id,
         total_price,
         total_products,
