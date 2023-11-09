@@ -2,9 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { northwindTradersModel } from './database';
-import * as schemas from 'schemas';
-import geoip from 'geoip-country';
-import dns from 'dns';
 
 
 const app = express();
@@ -22,36 +19,14 @@ app.use(cors());
 
 dotenv.config();
 
-const POSTRGRES_REGION = "Europe (Frankfurt)";
-
 
 const PORT = Number(process.env.PORT) || 80;
-
-type DatabaseModelType =
-    | typeof schemas.categories.$inferSelect
-    | typeof schemas.customers.$inferSelect
-    | typeof schemas.employees.$inferSelect | typeof schemas.employees.$inferSelect & { Name: string }
-    | typeof schemas.orderDetails.$inferSelect
-    | typeof schemas.orders.$inferSelect
-    | typeof schemas.products.$inferSelect
-    | typeof schemas.regions.$inferSelect
-    | typeof schemas.shippers.$inferSelect
-    | typeof schemas.suppliers.$inferSelect
-    | typeof schemas.territories.$inferSelect;
-
-function filterObject(obj: DatabaseModelType, fieldsToInclude: string[], fieldsToChange: { [index: string]: string } = {}): { [index: string]: number | string | null } {
-    const filteredEntries = Object.entries(obj).filter(([key, value]) => fieldsToInclude.includes(key));
-    const changedEntries = filteredEntries.map(([key, value]) => (key in fieldsToChange) ? [fieldsToChange[key], value] : [key, value])
-    const filteredObj = Object.fromEntries(changedEntries);
-    return filteredObj;
-}
 
 
 app.get("/", async (req: express.Request, res: express.Response) => {
     res.status(200).send("healthy");
 })
 
-const MAX_ITEMS_PER_PAGE = 20;
 
 app.get("/suppliers", async (req: express.Request, res: express.Response) => {
     let dbResponse, suppliersObj;
@@ -74,6 +49,7 @@ app.get("/suppliers", async (req: express.Request, res: express.Response) => {
 
 
 })
+
 
 app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Response) => {
     const supplierId = Number(req.params.supplier_id);
@@ -112,6 +88,7 @@ app.get("/supplier/:supplier_id", async (req: express.Request, res: express.Resp
     });
 })
 
+
 app.get("/products", async (req: express.Request, res: express.Response) => {
     let productsObj, dbResponse;
     try {
@@ -133,6 +110,7 @@ app.get("/products", async (req: express.Request, res: express.Response) => {
 
 
 })
+
 
 app.get("/product/:product_id", async (req: express.Request, res: express.Response) => {
     const productId = Number(req.params.product_id);
@@ -160,6 +138,7 @@ app.get("/product/:product_id", async (req: express.Request, res: express.Respon
     });
 })
 
+
 app.get("/orders", async (req: express.Request, res: express.Response) => {
     let ordersObj, dbResponse;
     try {
@@ -179,6 +158,7 @@ app.get("/orders", async (req: express.Request, res: express.Response) => {
         queryTime: dbResponse.queryTime
     });
 })
+
 
 app.get("/order/:order_id", async (req: express.Request, res: express.Response) => {
     const orderId = Number(req.params.order_id);
@@ -206,6 +186,7 @@ app.get("/order/:order_id", async (req: express.Request, res: express.Response) 
     });
 })
 
+
 app.get("/employees", async (req: express.Request, res: express.Response) => {
     let employeesObj, dbResponse;
     try {
@@ -225,6 +206,7 @@ app.get("/employees", async (req: express.Request, res: express.Response) => {
         queryTime: dbResponse.queryTime
     });
 })
+
 
 app.get("/employee/:employee_id", async (req: express.Request, res: express.Response) => {
     const employeeId = Number(req.params.employee_id);
@@ -261,6 +243,7 @@ app.get("/employee/:employee_id", async (req: express.Request, res: express.Resp
     });
 })
 
+
 app.get("/customers", async (req: express.Request, res: express.Response) => {
     let customersObj, dbResponse;
     try {
@@ -280,6 +263,7 @@ app.get("/customers", async (req: express.Request, res: express.Response) => {
         queryTime: dbResponse.queryTime
     });
 })
+
 
 app.get("/customer/:customer_id", async (req: express.Request, res: express.Response) => {
     const customerId = req.params.customer_id;
@@ -306,6 +290,7 @@ app.get("/customer/:customer_id", async (req: express.Request, res: express.Resp
         queryTime: dbResponse.queryTime
     });
 })
+
 
 app.get("/search", async (req: express.Request, res: express.Response) => {
     const tableName = String(req.query.tblName);
@@ -339,10 +324,6 @@ app.get("/search", async (req: express.Request, res: express.Response) => {
 app.listen(PORT, "0.0.0.0", async () => {
     await northwindTradersModel.migrateDatabase();
     await northwindTradersModel.fillDatabase();
-
-    // await northwindTradersModel.getProductsByName("ch");
-    // console.log(await northwindTradersModel.getCustomersByCompanyName("an"))
-    // await northwindTradersModel.getAllOrders();
 
     console.log(`app is listening on ${PORT} port.`)
 })
