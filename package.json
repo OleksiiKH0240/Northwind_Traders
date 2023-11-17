@@ -1,5 +1,6 @@
 {
     "scripts": {
+        "db_push": "drizzle-kit push:pg",
         "generate": "drizzle-kit generate:pg",
         "build": "esbuild src/app.ts --platform=node --target=node16 --format=cjs --bundle --minify --outfile=dist/app.js",
         "dev": "nodemon src/app.ts",
@@ -14,6 +15,7 @@
         "esbuild": "^0.19.5",
         "express": "^4.18.2",
         "postgres": "^3.4.2",
+        "tsx": "^4.1.2",
         "typescript": "^5.2.2"
     },
     "devDependencies": {
