@@ -18,15 +18,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
-// app.use(session({
-//     secret: "some secret",
-//     resave: true,
-//     saveUninitialized: true,
-//     unset: 'destroy',
-//     cookie: { path: "/", httpOnly: true, sameSite: 'lax' }
-// }));
 
-// app.use("/customers", customerRouter);
 app.use(customerRouter);
 app.use(supplierRouter);
 app.use(productRouter);
