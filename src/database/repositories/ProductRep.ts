@@ -2,10 +2,10 @@ import { db, POSTGRES_DB, PRODUCT_VERSION } from "database/databaseConnection";
 import products from 'database/schemas/products';
 import suppliers from "database/schemas/suppliers";
 import { ModelTemplateReturnType, ProductReturnType, ProductsReturnType, ProductsSearchReturnType } from "database/RepReturnTypes";
-import { eq, sql, aliasedTable } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 
-class ProductRep{
+class ProductRep {
     dbClient
 
     constructor(dbClient = db) {
@@ -79,18 +79,15 @@ class ProductRep{
         where lower(product_name) like '%${productName}%';`;
 
         const start = Date.now();
-        const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));
+        const result = await this.dbClient.select({
+            productId: products.productId,
+            productName: products.productName,
+            quantityPerUnit: products.quantityPerUnit,
+            unitPrice: products.unitPrice,
+            unitsInStock: products.unitsInStock
+        }).from(products).
+            where(sql.raw(`lower(product_name) like '%${productName}%'`));
         const end = Date.now();
-
-        const result = queryResult.map((productObj) => {
-            return {
-                productId: Number(productObj.product_id),
-                productName: String(productObj.product_name),
-                quantityPerUnit: String(productObj.quantity_per_unit),
-                unitPrice: Number(productObj.unit_price),
-                unitsInStock: Number(productObj.units_in_stock)
-            };
-        })
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result };
     }

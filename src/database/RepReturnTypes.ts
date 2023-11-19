@@ -54,10 +54,10 @@ export type CustomerReturnType = {
 
 export type CustomersSearchReturnType = {
     customerId: string,
-    companyName: string,
-    contactName: string,
-    contactTitle: string,
-    phone: string
+    companyName: string | null,
+    contactName: string | null,
+    contactTitle: string | null,
+    phone: string | null
 }[];
 
 export type SuppliersReturnType = {
@@ -107,10 +107,10 @@ export type ProductReturnType = {
 
 export type ProductsSearchReturnType = {
     productId: number,
-    productName: string,
-    quantityPerUnit: string,
-    unitPrice: number,
-    unitsInStock: number
+    productName: string | null,
+    quantityPerUnit: string | null,
+    unitPrice: string | null,
+    unitsInStock: number| null
 }[];
 
 export type OrdersReturnType = {

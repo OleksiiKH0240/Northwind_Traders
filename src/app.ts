@@ -11,6 +11,7 @@ import employeeRouter from 'routers/EmployeeRouter';
 import searchRouter from 'routers/SearchRouter';
 
 import 'dotenv/config';
+import errorHandler from 'middlewares/ErrorHandlers';
 
 
 const app = express();
@@ -32,6 +33,9 @@ app.use(productRouter);
 app.use(orderRouter);
 app.use(employeeRouter);
 app.use(searchRouter);
+
+app.use(errorHandler.errorLogger);
+app.use(errorHandler.errorResponder);
 
 
 const PORT = Number(process.env.PORT) || 80;

@@ -1,48 +1,43 @@
 import productRep from "database/repositories/ProductRep";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 
 class Product {
-    getAllProducts = async (req: Request, res: Response) => {
+    getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
         let productsObj, dbResponse;
         try {
             dbResponse = await productRep.allProducts();
             productsObj = dbResponse.result;
+
+            res.status(200).json({
+                response: productsObj,
+                dt: dbResponse.dt,
+                sqlQuery: dbResponse.sqlQuery,
+                productVersion: dbResponse.PRODUCT_VERSION,
+                queryTime: dbResponse.queryTime
+            });
         } catch (error) {
-            res.status(500).send("something went wrong on the server side.");
-            console.log(error);
-            return;
+            next(error);
         }
-
-        res.status(200).json({
-            response: productsObj,
-            dt: dbResponse.dt,
-            sqlQuery: dbResponse.sqlQuery,
-            productVersion: dbResponse.PRODUCT_VERSION,
-            queryTime: dbResponse.queryTime
-        });
-
     }
 
-    getProductById = async (req: Request, res: Response) => {
+    getProductById = async (req: Request, res: Response, next: NextFunction) => {
         const productId = Number(req.params.product_id);
 
         let productObj, dbResponse;
         try {
             dbResponse = await productRep.productById(productId);
             productObj = dbResponse.result;
-        } catch (error) {
-            res.status(500).send("something went wrong on the server side.");
-            console.log(error);
-            return;
-        }
 
-        res.status(200).json({
-            response: productObj,
-            dt: dbResponse.dt,
-            sqlQuery: dbResponse.sqlQuery,
-            productVersion: dbResponse.PRODUCT_VERSION,
-            queryTime: dbResponse.queryTime
-        });
+            res.status(200).json({
+                response: productObj,
+                dt: dbResponse.dt,
+                sqlQuery: dbResponse.sqlQuery,
+                productVersion: dbResponse.PRODUCT_VERSION,
+                queryTime: dbResponse.queryTime
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 }
 

@@ -1,33 +1,36 @@
 import customerRep from "database/repositories/CustomerRep";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 class Customer {
-    getAllCustomers = async (req: Request, res: Response) => {
+    getAllCustomers = async (req: Request, res: Response, next: NextFunction) => {
         let customersObj, dbResponse;
+
+        dbResponse = await customerRep.allCustomers();
+        customersObj = dbResponse.result;
+
         try {
             dbResponse = await customerRep.allCustomers();
             customersObj = dbResponse.result;
-        } catch (error) {
-            res.status(500).send("something went wrong on the server side.");
-            console.log(error);
-            return;
-        }
 
-        res.status(200).json({
-            response: customersObj,
-            dt: dbResponse.dt,
-            sqlQuery: dbResponse.sqlQuery,
-            productVersion: dbResponse.PRODUCT_VERSION,
-            queryTime: dbResponse.queryTime
-        });
+            res.status(200).json({
+                response: customersObj,
+                dt: dbResponse.dt,
+                sqlQuery: dbResponse.sqlQuery,
+                productVersion: dbResponse.PRODUCT_VERSION,
+                queryTime: dbResponse.queryTime
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 
-    getCustomerById = async (req: Request, res: Response) => {
+    getCustomerById = async (req: Request, res: Response, next: NextFunction) => {
         const customerId = req.params.customer_id;
         let customerObj, dbResponse;
         try {
             dbResponse = await customerRep.customerById(customerId);
             customerObj = dbResponse.result;
+            
             res.status(200).json({
                 response: customerObj,
                 dt: dbResponse.dt,
@@ -36,9 +39,7 @@ class Customer {
                 queryTime: dbResponse.queryTime
             });
         } catch (error) {
-            res.status(500).send("something went wrong on the server side.");
-            console.log(error);
-            return;
+            next(error);
         }
     }
 }

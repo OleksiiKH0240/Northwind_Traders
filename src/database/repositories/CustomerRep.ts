@@ -77,18 +77,15 @@ class CustomerRep {
         where lower(company_name) like '%${companyName}%';`;
 
         const start = Date.now();
-        const queryResult = await this.dbClient.execute(sql.raw(sqlQuery));
+        const result = await this.dbClient.select({
+            customerId: customers.customerId,
+            companyName: customers.companyName,
+            contactName: customers.contactName,
+            contactTitle: customers.contactTitle,
+            phone: customers.phone
+        }).from(customers).
+            where(sql.raw(`lower(company_name) like '%${companyName}%'`));
         const end = Date.now();
-
-        const result = queryResult.map((customerObj) => {
-            return {
-                customerId: String(customerObj.customer_id),
-                companyName: String(customerObj.company_name),
-                contactName: String(customerObj.contact_name),
-                contactTitle: String(customerObj.contact_title),
-                phone: String(customerObj.phone)
-            };
-        })
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result };
     }
