@@ -12,8 +12,7 @@ class EmployeeRep {
     }
 
     allEmployees = async (): Promise<ModelTemplateReturnType<EmployeesReturnType>> => {
-        const start = Date.now();
-        const result = await this.dbClient.select({
+        const resultQuery = this.dbClient.select({
             employeeId: employees.employeeId,
             Name: sql<string>`concat(${employees.firstName}, ' ', ${employees.lastName})`,
             Title: employees.title,
@@ -21,24 +20,19 @@ class EmployeeRep {
             Country: employees.country,
             Phone: employees.homePhone
         }).from(employees);
+
+        const start = Date.now();
+        const result = await resultQuery;
         const end = Date.now();
 
-        const sqlQuery = `
-        select employee_id                 as "employeeId",
-        concat(first_name, ' ', last_name) as "Name",
-        title                              as "Title",
-        city                               as "City",
-        country                            as "Country",
-        home_phone                         as "Phone"
-        from ${POSTGRES_DB}.employees;`;
+        const sqlQuery = resultQuery.toSQL()["sql"];
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
     employeeById = async (employeeId: number): Promise<ModelTemplateReturnType<EmployeeReturnType>> => {
-        const start = Date.now();
         const e = aliasedTable(employees, "e");
-        const result = await this.dbClient.select({
+        const resultQuery = this.dbClient.select({
             employeeId: employees.employeeId,
             Name: sql<string>`concat(${employees.firstName}, ' ', ${employees.lastName})`,
             Title: employees.title,
@@ -57,27 +51,14 @@ class EmployeeRep {
         }).from(employees).
             leftJoin(e, eq(employees.reportsTo, e.employeeId)).
             where(eq(employees.employeeId, employeeId));
+
+        const start = Date.now();
+        const result = await resultQuery;
         const end = Date.now();
 
-        const sqlQuery = `
-        select employee_id                     as "employeeId",
-        concat(first_name, ' ', last_name)     as "Name",
-        title                                  as "Title",
-        title_of_courtesy                      as "Title Of Courtesy",
-        birth_date                             as "Birth Date",
-        hire_date                              as "Hire Date",
-        address                                as "Address",
-        city                                   as "City",
-        postal_code                            as "Postal Code",
-        country                                as "Country",
-        home_phone                             as "Phone",
-        extension                              as "Extension",
-        notes                                  as "Notes",
-        concat(e.first_name, ' ', e.last_name) as "Reports To",
-        employees.reports_to                   as "reportsTo"
-        from ${POSTGRES_DB}.employees
-          left join ${POSTGRES_DB}.employees e on e.employee_id = employees.reports_to from ${POSTGRES_DB}.employees
-        where employee_id=${employeeId};`;
+        let { "sql": sqlObj, params } = resultQuery.toSQL();
+        params.forEach((param: any) => { sqlObj = sqlObj.replace(/\$[1-9]+/, `${param}`) });
+        const sqlQuery = sqlObj;
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }

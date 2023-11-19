@@ -13,8 +13,7 @@ class ProductRep {
     }
 
     allProducts = async (): Promise<ModelTemplateReturnType<ProductsReturnType>> => {
-        const start = Date.now();
-        const result = await this.dbClient.select({
+        const resultQuery = this.dbClient.select({
             productId: products.productId,
             Name: products.productName,
             "Qt per unit": products.quantityPerUnit,
@@ -22,23 +21,18 @@ class ProductRep {
             Stock: products.unitsInStock,
             Order: products.unitsOnOrder
         }).from(products);
+
+        const start = Date.now();
+        const result = await resultQuery;
         const end = Date.now();
 
-        const sqlQuery = `
-        select product_id        as productId,
-        product_name      as Name,
-        quantity_per_unit as "Qt per unit",
-        unit_price        as Price,
-        units_in_stock    as Stock,
-        units_on_order    as Order
-        from ${POSTGRES_DB}.products;`;
+        const sqlQuery = resultQuery.toSQL()["sql"];
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result };
     }
 
     productById = async (productId: number): Promise<ModelTemplateReturnType<ProductReturnType>> => {
-        const start = Date.now();
-        const result = await this.dbClient.select({
+        const resultQuery = this.dbClient.select({
             productId: products.productId,
             "Supplier": suppliers.companyName,
             "Product Name": products.productName,
@@ -52,34 +46,20 @@ class ProductRep {
         }).from(products).
             innerJoin(suppliers, eq(products.supplierId, suppliers.supplierId)).
             where(eq(products.productId, productId));
+
+        const start = Date.now();
+        const result = await resultQuery;
         const end = Date.now();
 
-        const sqlQuery = `
-        select product_id        as productId,
-        company_name      as Supplier,
-        product_name      as "Product Name",
-        products.supplierId,
-        quantity_per_unit as "Quantity Per Unit",
-        unit_price        as "Unit Price",
-        units_in_stock    as "Stock",
-        units_on_order    as "Units In Order",
-        reorder_level     as "Reorder Level",
-        discontinued      as Discontinued
-        from ${POSTGRES_DB}.products
-          inner join ${POSTGRES_DB}.suppliers s on s.supplier_id = products.supplier_id
-        where product_id = ${productId};`;
+        let { "sql": sqlObj, params } = resultQuery.toSQL();
+        params.forEach((param: any) => { sqlObj = sqlObj.replace(/\$[1-9]+/, `${param}`) });
+        const sqlQuery = sqlObj;
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result[0] };
     }
 
     productsByName = async (productName: string): Promise<ModelTemplateReturnType<ProductsSearchReturnType>> => {
-        const sqlQuery = `
-        select product_id, product_name, quantity_per_unit, unit_price, units_in_stock
-        from ${POSTGRES_DB}.products
-        where lower(product_name) like '%${productName}%';`;
-
-        const start = Date.now();
-        const result = await this.dbClient.select({
+        const resultQuery = this.dbClient.select({
             productId: products.productId,
             productName: products.productName,
             quantityPerUnit: products.quantityPerUnit,
@@ -87,7 +67,12 @@ class ProductRep {
             unitsInStock: products.unitsInStock
         }).from(products).
             where(sql.raw(`lower(product_name) like '%${productName}%'`));
+
+        const start = Date.now();
+        const result = await resultQuery;
         const end = Date.now();
+
+        const sqlQuery = resultQuery.toSQL()["sql"];
 
         return { dt: new Date(), "PRODUCT_VERSION": `${PRODUCT_VERSION}`, queryTime: (end - start) / 1000, sqlQuery, result: result };
     }
