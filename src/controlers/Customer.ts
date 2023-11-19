@@ -5,9 +5,6 @@ class Customer {
     getAllCustomers = async (req: Request, res: Response, next: NextFunction) => {
         let customersObj, dbResponse;
 
-        dbResponse = await customerRep.allCustomers();
-        customersObj = dbResponse.result;
-
         try {
             dbResponse = await customerRep.allCustomers();
             customersObj = dbResponse.result;
