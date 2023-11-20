@@ -114,38 +114,38 @@ export type ProductsSearchReturnType = {
 }[];
 
 export type OrdersReturnType = {
-    Id: number,
-    "Total Price": number,
-    Products: number,
-    Quantity: number,
-    Shipped: string,
-    "Ship Name": string,
-    City: string,
-    Country: string
+    Id: number | null,
+    "Total Price": number | null,
+    Products: number | null,
+    Quantity: number | null,
+    Shipped: string | null,
+    "Ship Name": string | null,
+    City: string | null,
+    Country: string | null
 }[];
 
 export type OrderReturnType = {
-    "Total Price": number,
-    "Total Products": number,
-    "Total Quantity": number,
-    "Total Discount": number,
-    "Customer Id": string,
-    "Shipped Date": string,
-    "Ship Via": string,
-    "Freight": string,
-    "Required Date": string,
-    "Order Date": string,
-    "Ship Name": string,
-    "Ship City": string,
+    "Total Price": number | null,
+    "Total Products": number | null,
+    "Total Quantity": number | null,
+    "Total Discount": number | null,
+    "Customer Id": string | null,
+    "Shipped Date": string | null,
+    "Ship Via": string | null,
+    "Freight": string | null,
+    "Required Date": string | null,
+    "Order Date": string | null,
+    "Ship Name": string | null,
+    "Ship City": string | null,
     "Ship Region": string,
-    "Ship Postal Code": string,
-    "Ship Country": string,
+    "Ship Postal Code": string | null,
+    "Ship Country": string | null,
     ProductsInOrder: {
         productId: number,
-        Product: string,
-        Quantity: number,
-        "Order Price": number,
-        "Total Price": number,
-        Discount: number
+        Product: string | null,
+        Quantity: number | null,
+        "Order Price": number | null,
+        "Total Price": number | null,
+        Discount: number | null
     }[]
 } | {};
