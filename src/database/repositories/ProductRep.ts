@@ -1,4 +1,4 @@
-import { db, POSTGRES_DB, PRODUCT_VERSION } from "database/databaseConnection";
+import { db, PRODUCT_VERSION } from "database/databaseConnection";
 import products from 'database/schemas/products';
 import suppliers from "database/schemas/suppliers";
 import { ModelTemplateReturnType, ProductReturnType, ProductsReturnType, ProductsSearchReturnType } from "database/RepReturnTypes";

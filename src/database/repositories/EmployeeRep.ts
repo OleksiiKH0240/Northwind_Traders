@@ -1,4 +1,4 @@
-import { db, POSTGRES_DB, PRODUCT_VERSION } from "database/databaseConnection";
+import { db, PRODUCT_VERSION } from "database/databaseConnection";
 import employees from 'database/schemas/employees';
 import { ModelTemplateReturnType, EmployeeReturnType, EmployeesReturnType } from "database/RepReturnTypes";
 import { eq, sql, aliasedTable } from "drizzle-orm";
