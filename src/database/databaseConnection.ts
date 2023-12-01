@@ -8,6 +8,7 @@ const { POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_HOST, POSTGRES_PORT, ENDPOINT
 export const { PRODUCT_VERSION, POSTGRES_DB } = <{ PRODUCT_VERSION: string, POSTGRES_DB: string }>process.env;
 
 const POSTGRES_URL = `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`;
+// const POSTGRES_URL = `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?ssl=true`;
 
 const queryClientOptions: {
     ssl: boolean | object | "require" | "allow" | "prefer" | "verify-full" | undefined,

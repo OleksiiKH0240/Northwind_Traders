@@ -1,6 +1,6 @@
 import { db, PRODUCT_VERSION } from "database/databaseConnection";
 import customers from 'database/schemas/customers';
-import { ModelTemplateReturnType, CustomerReturnType, CustomersReturnType, CustomersSearchReturnType } from "database/RepReturnTypes";
+import { ModelTemplateReturnType, CustomerReturnType, CustomersReturnType, CustomersSearchReturnType } from "types/RepReturnTypes";
 import { eq, sql } from "drizzle-orm";
 
 

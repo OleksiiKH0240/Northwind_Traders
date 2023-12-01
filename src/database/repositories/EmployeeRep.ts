@@ -1,6 +1,6 @@
 import { db, PRODUCT_VERSION } from "database/databaseConnection";
 import employees from 'database/schemas/employees';
-import { ModelTemplateReturnType, EmployeeReturnType, EmployeesReturnType } from "database/RepReturnTypes";
+import { ModelTemplateReturnType, EmployeeReturnType, EmployeesReturnType } from "types/RepReturnTypes";
 import { eq, sql, aliasedTable } from "drizzle-orm";
 
 

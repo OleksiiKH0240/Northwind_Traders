@@ -19,7 +19,8 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.use(customerRouter);
+app.use("api/v1/customers/", customerRouter);
+app.use("api/v2/customers/", customerRouter);
 app.use(supplierRouter);
 app.use(productRouter);
 app.use(orderRouter);
